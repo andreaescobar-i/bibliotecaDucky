@@ -1,0 +1,380 @@
+[
+  {
+    "id": "1:336",
+    "name": "catálogo - usuarios",
+    "width": 1280,
+    "module": "1-336",
+    "overlay": false
+  },
+  {
+    "id": "6:26",
+    "name": "detalle libro - usuarios",
+    "width": 1280,
+    "module": "6-26",
+    "overlay": false
+  },
+  {
+    "id": "7:439",
+    "name": "cuenta - usuarios",
+    "width": 1280,
+    "module": "7-439",
+    "overlay": false
+  },
+  {
+    "id": "7:1177",
+    "name": "registrar prestamo/validar usuario - bibliotecario",
+    "width": 1280,
+    "module": "7-1177",
+    "overlay": false
+  },
+  {
+    "id": "27:759",
+    "name": "inicio sesión",
+    "width": 1280,
+    "module": "27-759",
+    "overlay": false
+  },
+  {
+    "id": "162:2206",
+    "name": "registrar prestamo/validar libro - bibliotecario",
+    "width": 1280,
+    "module": "162-2206",
+    "overlay": false
+  },
+  {
+    "id": "174:3080",
+    "name": "registrar prestamo - bibliotecario",
+    "width": 1280,
+    "module": "174-3080",
+    "overlay": false
+  },
+  {
+    "id": "182:571",
+    "name": "registrar prestamo/recibo - bibliotecario",
+    "width": 1280,
+    "module": "182-571",
+    "overlay": false
+  },
+  {
+    "id": "182:908",
+    "name": "devolución - bibliotecario",
+    "width": 1280,
+    "module": "182-908",
+    "overlay": false
+  },
+  {
+    "id": "207:712",
+    "name": "renovación - bibliotecario",
+    "width": 1280,
+    "module": "207-712",
+    "overlay": false
+  },
+  {
+    "id": "207:849",
+    "name": "multas y pagos - bibliotecario",
+    "width": 1280,
+    "module": "207-849",
+    "overlay": false
+  },
+  {
+    "id": "207:1046",
+    "name": "suspendidos - bibliotecario",
+    "width": 1280,
+    "module": "207-1046",
+    "overlay": false
+  },
+  {
+    "id": "207:1228",
+    "name": "gestión catálogo - administrador",
+    "width": 1280,
+    "module": "207-1228",
+    "overlay": false
+  },
+  {
+    "id": "207:1430",
+    "name": "reportes e inventario - administrador",
+    "width": 1280,
+    "module": "207-1430",
+    "overlay": false
+  },
+  {
+    "id": "207:1669",
+    "name": "compras y adquisiciones - comprador",
+    "width": 1280,
+    "module": "207-1669",
+    "overlay": false
+  },
+  {
+    "id": "211:933",
+    "name": "Overlay · Resultado",
+    "width": 456,
+    "module": "211-933",
+    "overlay": true
+  },
+  {
+    "id": "211:941",
+    "name": "Overlay · Cambiar rol",
+    "width": 300,
+    "module": "211-941",
+    "overlay": true
+  },
+  {
+    "id": "211:962",
+    "name": "Overlay · Registrar pago",
+    "width": 496,
+    "module": "211-962",
+    "overlay": true
+  },
+  {
+    "id": "211:1005",
+    "name": "Overlay · Reportar libro perdido",
+    "width": 640,
+    "module": "211-1005",
+    "overlay": true
+  },
+  {
+    "id": "211:1034",
+    "name": "Overlay · Ficha bibliográfica",
+    "width": 720,
+    "module": "211-1034",
+    "overlay": true
+  },
+  {
+    "id": "211:1135",
+    "name": "Overlay · Etiqueta del libro",
+    "width": 454,
+    "module": "211-1135",
+    "overlay": true
+  },
+  {
+    "id": "211:1149",
+    "name": "Overlay · Dar de baja",
+    "width": 640,
+    "module": "211-1149",
+    "overlay": true
+  },
+  {
+    "id": "211:1194",
+    "name": "Overlay · Lista de suspendidos",
+    "width": 720,
+    "module": "211-1194",
+    "overlay": true
+  },
+  {
+    "id": "211:1204",
+    "name": "Overlay · Nueva petición",
+    "width": 640,
+    "module": "211-1204",
+    "overlay": true
+  },
+  {
+    "id": "211:1245",
+    "name": "Overlay · Revisar petición",
+    "width": 640,
+    "module": "211-1245",
+    "overlay": true
+  },
+  {
+    "id": "211:1260",
+    "name": "Overlay · Registrar recepción",
+    "width": 640,
+    "module": "211-1260",
+    "overlay": true
+  },
+  {
+    "id": "211:1295",
+    "name": "Overlay · Recuperar acceso",
+    "width": 640,
+    "module": "211-1295",
+    "overlay": true
+  },
+  {
+    "id": "241:3397",
+    "name": "gestión de usuarios - administrador",
+    "width": 1280,
+    "module": "241-3397",
+    "overlay": false
+  },
+  {
+    "id": "241:3699",
+    "name": "Overlay · Alta y cambio de usuario",
+    "width": 720,
+    "module": "241-3699",
+    "overlay": true
+  },
+  {
+    "id": "241:3795",
+    "name": "Overlay · Baja de usuario",
+    "width": 640,
+    "module": "241-3795",
+    "overlay": true
+  },
+  {
+    "id": "247:2861",
+    "name": "gestión de libros - administrador",
+    "width": 1280,
+    "module": "247-2861",
+    "overlay": false
+  },
+  {
+    "id": "247:3086",
+    "name": "gestión de libros - bibliotecario",
+    "width": 1280,
+    "module": "247-3086",
+    "overlay": false
+  },
+  {
+    "id": "247:3458",
+    "name": "Overlay · Gestión de ejemplares",
+    "width": 921,
+    "module": "247-3458",
+    "overlay": true
+  },
+  {
+    "id": "247:3593",
+    "name": "Overlay · Clasificar ejemplar",
+    "width": 720,
+    "module": "247-3593",
+    "overlay": true
+  },
+  {
+    "id": "247:3645",
+    "name": "Overlay · Etiqueta de ejemplar",
+    "width": 540,
+    "module": "247-3645",
+    "overlay": true
+  },
+  {
+    "id": "247:3658",
+    "name": "Overlay · Baja con historial",
+    "width": 640,
+    "module": "247-3658",
+    "overlay": true
+  },
+  {
+    "id": "247:3679",
+    "name": "Overlay · Historial del libro",
+    "width": 760,
+    "module": "247-3679",
+    "overlay": true
+  },
+  {
+    "id": "272:2449",
+    "name": "catálogo - bibliotecario",
+    "width": 1280,
+    "module": "272-2449",
+    "overlay": false
+  },
+  {
+    "id": "283:1681",
+    "name": "Overlay · Asignar rol",
+    "width": 176,
+    "module": "283-1681",
+    "overlay": true
+  },
+  {
+    "id": "312:1701",
+    "name": "Overlay · Mi perfil",
+    "width": 480,
+    "module": "312-1701",
+    "overlay": true
+  },
+  {
+    "id": "321:2162",
+    "name": "Chat · Asistente Ducky",
+    "width": 440,
+    "module": "321-2162",
+    "overlay": true
+  },
+  {
+    "id": "342:1840",
+    "name": "Acceso bloqueado · Estatus escolar",
+    "width": 456,
+    "module": "342-1840",
+    "overlay": true
+  },
+  {
+    "id": "371:1836",
+    "name": "gestión de perfiles - administrador",
+    "width": 1280,
+    "module": "371-1836",
+    "overlay": false
+  },
+  {
+    "id": "373:1903",
+    "name": "Overlay · Confirmar desactivación de perfil",
+    "width": 640,
+    "module": "373-1903",
+    "overlay": true
+  },
+  {
+    "id": "373:1912",
+    "name": "Overlay · Desactivación bloqueada por cuentas activas",
+    "width": 640,
+    "module": "373-1912",
+    "overlay": true
+  },
+  {
+    "id": "2081:2172",
+    "name": "Overlay · Seguimiento de adquisición",
+    "width": 720,
+    "module": "2081-2172",
+    "overlay": true
+  },
+  {
+    "id": "2081:2189",
+    "name": "Overlay · Entrega al encargado del catálogo",
+    "width": 640,
+    "module": "2081-2189",
+    "overlay": true
+  },
+  {
+    "id": "2081:2208",
+    "name": "Overlay · Historial de adquisiciones",
+    "width": 640,
+    "module": "2081-2208",
+    "overlay": true
+  },
+  {
+    "id": "2081:3418",
+    "name": "solicitudes de libros - administrador",
+    "width": 1280,
+    "module": "2081-3418",
+    "overlay": false
+  },
+  {
+    "id": "2114:2308",
+    "name": "Overlay · Dar de baja libro completo",
+    "width": 640,
+    "module": "2114-2308",
+    "overlay": true
+  },
+  {
+    "id": "2189:2119",
+    "name": "Overlay · Enviados al catálogo",
+    "width": 920,
+    "module": "2189-2119",
+    "overlay": true
+  },
+  {
+    "id": "2196:2026",
+    "name": "Overlay · Visor PDF del libro",
+    "width": 760,
+    "module": "2196-2026",
+    "overlay": true
+  },
+  {
+    "id": "2196:2044",
+    "name": "Overlay · Imprimir libro",
+    "width": 600,
+    "module": "2196-2044",
+    "overlay": true
+  },
+  {
+    "id": "2196:2076",
+    "name": "Overlay · Confirmación de impresión",
+    "width": 560,
+    "module": "2196-2076",
+    "overlay": true
+  }
+]
