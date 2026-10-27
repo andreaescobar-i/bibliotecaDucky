@@ -1,15 +1,51 @@
-export const roles=['Alumno','Maestro','Colaborador','Bibliotecario','Administrador','Comprador de libros'];
-export type Book={id:string;title:string;author:string;publisher:string;code:string;state:string;use:string;copies:number;location:string;isbn:string;description:string};
-export const seedBooks:Book[]=[
- ['1','Cien años de soledad','Gabriel García Márquez','Diana','LIT-863.64-GAR','Disponible','Préstamo externo',4],
- ['2','Introducción a los algoritmos','Thomas H. Cormen','MIT Press','COM-005.1-COR','Prestado','Préstamo externo',3],
- ['3','Historia mínima de México','Pablo Escalante','El Colegio de México','HIS-972-ESC','No disponible','Consulta interna',2],
- ['4','Cálculo de una variable','James Stewart','Cengage','MAT-515-STE','Disponible','Reservado',6],
- ['5','Pedro Páramo','Juan Rulfo','RM','LIT-863-RUL','Disponible','Préstamo externo',3],
-].map(([id,title,author,publisher,code,state,use,copies])=>({id,title,author,publisher,code,state,use,copies,location:'Estante LIT · A1',isbn:'No registrado',description:'Referencia académica disponible en la Biblioteca Ducky.'})) as Book[];
-export const initialData={books:seedBooks,users:[{id:'A01234567',name:'Mariana López',email:'mariana.lopez@ducky.edu.mx',role:'Alumno',active:true},{id:'B000104',name:'Ernesto Díaz',email:'ernesto.diaz@ducky.edu.mx',role:'Bibliotecario',active:true},{id:'A01678234',name:'Ana Torres Ruiz',email:'ana.torres@ducky.edu.mx',role:'Alumno',active:false}],requests:[{id:'SOL-2418',title:'Diseño de sistemas interactivos',requester:'Facultad de Diseño',cost:2340,quantity:1,state:'Por autorizar',received:0},{id:'SOL-2391',title:'Artificial Intelligence: A Modern Approach',requester:'Ing. Computación',cost:1820,quantity:1,state:'Autorizado',received:0},{id:'SOL-2345',title:'El infinito en un junco',requester:'Humanidades',cost:540,quantity:1,state:'Recibido',received:1}],loans:[{id:'PRE-2025-1731',bookId:'2',userId:'A01234567',start:'2025-10-04',due:'2025-10-18',renewals:1,returned:false},{id:'PRE-2025-1654',bookId:'5',userId:'A01234567',start:'2025-10-07',due:'2025-10-21',renewals:0,returned:false}],fines:[{id:'F1',user:'Ana Torres Ruiz',amount:120,reason:'12 días de retraso',paid:false},{id:'F2',user:'Rodrigo Díaz',amount:50,reason:'5 días de retraso',paid:false},{id:'F3',user:'Laura Méndez Soto',amount:80,reason:'8 días de retraso',paid:true}],history:[] as {at:string;action:string;detail:string}[]};
-export type Data=typeof initialData;
-export function loadData():Data {try{const d=JSON.parse(localStorage.getItem('ducky-data-v1')||'null');return d?.books&&d?.users&&d?.history?d:structuredClone(initialData)}catch{return structuredClone(initialData)}}
-export function saveData(d:Data){localStorage.setItem('ducky-data-v1',JSON.stringify(d))}
-export function addBusinessDays(days:number,from=new Date()){const date=new Date(from);while(days>0){date.setDate(date.getDate()+1);if(date.getDay()!==0&&date.getDay()!==6)days--}return date.toISOString().slice(0,10)}
-export const money=(n:number)=>new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN'}).format(n);
+import { initialData } from './data/demo-data';
+
+export const roles = [
+  'Alumno',
+  'Maestro',
+  'Colaborador',
+  'Bibliotecario',
+  'Administrador',
+  'Comprador de libros',
+];
+export type Book = {
+  id: string;
+  title: string;
+  author: string;
+  publisher: string;
+  code: string;
+  state: string;
+  use: string;
+  copies: number;
+  location: string;
+  isbn: string;
+  description: string;
+};
+export { seedBooks, initialData } from './data/demo-data';
+
+export type Data = typeof initialData;
+const STORAGE_KEY = 'ducky-data-v1';
+
+export function loadData(): Data {
+  try {
+    const storedData = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
+    return storedData?.books && storedData?.users && storedData?.history
+      ? storedData
+      : structuredClone(initialData);
+  } catch {
+    return structuredClone(initialData);
+  }
+}
+export function saveData(data: Data) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+}
+export function addBusinessDays(days: number, from = new Date()) {
+  const date = new Date(from);
+  while (days > 0) {
+    date.setDate(date.getDate() + 1);
+    if (date.getDay() !== 0 && date.getDay() !== 6) days--;
+  }
+  return date.toISOString().slice(0, 10);
+}
+export const money = (n: number) =>
+  new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(n);

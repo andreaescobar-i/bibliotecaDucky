@@ -49,11 +49,35 @@ El conjunto inicial usa los cinco libros que aparecen en las filas del diseño. 
 ## Código
 
 - `src/screens/`: vistas React identificadas por el nodo original de Figma, con sus atributos `data-node-id` para facilitar la trazabilidad.
-- `src/App.tsx`: navegación, ventanas y acciones.
-- `src/design-controls.tsx`: formularios accesibles, tablas y registros dinámicos.
+- `src/App.tsx`: coordinación de estado, ventanas y acciones.
+- `src/navigation.ts`: carga de pantallas y rutas iniciales por rol.
+- `src/components/`: formularios, textos dinámicos, tablas y explorador del prototipo.
+- `src/context/DesignContext.ts`: estado y acciones compartidos por las vistas.
+- `src/data/demo-data.ts`: registros iniciales de la demostración.
+- `src/design-controls.tsx`: exportaciones compartidas para las pantallas del diseño.
 - `src/model.ts`: datos de demostración y persistencia.
 - `src/design.css`: estilos extraídos y adaptados del diseño, sin dependencia de Tailwind.
 - `src/app.css`: interacciones y adaptación a distintos tamaños de pantalla.
 - `public/assets/`: imágenes, SVG y tipografía local. No se utilizan URLs temporales de Figma en ejecución.
 
 La tipografía Poppins procede de Google Fonts; los logotipos e iconos proceden del archivo proporcionado. Se incluye la licencia de Poppins en `public/assets/OFL-Poppins.txt`.
+
+## Formato del código
+
+Todos los archivos fuente usan dos espacios de sangría y formato automático con Prettier.
+Después de editar, ejecuta:
+
+```bash
+npm run format
+```
+
+Para comprobar el formato sin modificar archivos y validar TypeScript y la compilación:
+
+```bash
+npm run format:check
+npm run build
+```
+
+Los nombres numéricos de `src/screens/` corresponden a los nodos originales de Figma;
+`src/manifest.json` relaciona cada identificador con el nombre de su pantalla o diálogo.
+Los recursos de `public/assets/` y los archivos generados de `dist/` quedan fuera del formateo.
