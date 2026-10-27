@@ -102,3 +102,99 @@ npm run build
 descriptivo (`file`) y el nombre de su pantalla o diálogo. Los identificadores de ruta
 y los atributos `data-node-id` conservan la referencia original de Figma.
 Los recursos de `public/assets/` y los archivos generados de `dist/` quedan fuera del formateo.
+
+## Backend (API)
+
+La API REST vive en este mismo proyecto, junto al front: Node.js + Express + PostgreSQL con
+patrón **MVC**. Usa el mismo `package.json`, módulos ES (`import`/`export`), el mismo Prettier
+y las mismas pruebas con `node:test`.
+
+```text
+app.js, servidor.js      # Configuración de Express y punto de entrada
+config/                  # entorno.js (.env) y db.js (DbPool y transacciones)
+modelos/                 # M: consultas SQL parametrizadas ($1, $2...) — recursoModelo.js
+vistas/                  # V: formato de las respuestas JSON / PDF — recursoVista.js
+controladores/           # C: reglas de cada historia de usuario — recursoControlador.js
+rutas/                   # URLs en kebab-case — recursoRutas.js
+middlewares/             # Autenticación, permisos, validación y errores
+servicios/               # Integraciones simuladas (CIAA, Capital Humano, correo)
+utilidades/              # ErrorAplicacion y funciones compartidas
+db/                      # reiniciarBaseDatos.js, esquema/, migraciones/, semillas/
+tests/                   # Pruebas del front y de la API; tests/integracion/ usa la BD real
+```
+
+Flujo de una petición: `rutas → middlewares → controlador → modelo → vista → respuesta`.
+
+### Primera vez
+
+Requiere PostgreSQL 13 o posterior corriendo en tu máquina. Desde esta carpeta:
+
+```bash
+npm install
+cp .env.example .env   # en Windows también puedes copiarlo a mano
+```
+
+En `.env` escribe en `PGPASSWORD` la contraseña de tu usuario `postgres`. Después:
+
+```bash
+npm run db:reset   # crea la base sigb_ducky: esquema, migración y datos de prueba
+npm run test:bd    # comprueba la base: datos cargados y reglas de integridad
+npm run api        # API en http://localhost:3000/api (en otra terminal: npm run dev)
+```
+
+Abre `http://localhost:3000/api/salud`: debe decir `"baseDatos": "conectada"`.
+`npm run db:reset` **borra y vuelve a crear** la base; úsalo para regresar a los datos de prueba.
+
+### Scripts del backend
+
+| Script              | Uso                                                     |
+| ------------------- | ------------------------------------------------------- |
+| `npm run api`       | API con recarga automática (nodemon)                    |
+| `npm run api:start` | API sin recarga                                         |
+| `npm run db:reset`  | Recrea la base: esquema → migraciones → semillas        |
+| `npm test`          | Pruebas del front y de la API (no necesitan BD)         |
+| `npm run test:bd`   | Pruebas de integración contra la base real              |
+| `npm run lint`      | ESLint con las reglas del Estándar de Codificación      |
+| `npm run verificar` | Lint + formato + pruebas; ejecutar antes de cada commit |
+
+### Base de datos
+
+| Carpeta           | Contenido                                                               |
+| ----------------- | ----------------------------------------------------------------------- |
+| `db/esquema/`     | `000_biblioteca_schema.sql`: copia sin cambios del esquema del diagrama |
+| `db/migraciones/` | `001_sprint1.sql`: lo que el esquema base no cubría para el Sprint 1    |
+| `db/semillas/`    | Roles, permisos, perfiles, CIAA/Capital Humano simulados, catálogo...   |
+
+Cuentas de prueba (contraseña de todas: **`Ducky2026`**):
+
+| Identificador | Nombre           | Rol / perfil                   | Sirve para probar                    |
+| ------------- | ---------------- | ------------------------------ | ------------------------------------ |
+| `N000001`     | Patricia Morales | Administrador                  | Único administrador activo           |
+| `N000104`     | Ernesto Díaz     | Bibliotecario                  | Alta, cambio y baja de libros        |
+| `N000105`     | Gabriela Núñez   | Bibliotecario (solo consulta)  | Acceso negado por falta de permiso   |
+| `N000210`     | Ricardo Vega     | Comprador de libros            | Solicitudes y recepciones            |
+| `N000305`     | Sofía Hernández  | Maestro                        | Tiene 1 préstamo activo              |
+| `N000402`     | Luis Ramírez     | Colaborador                    | Consulta del catálogo                |
+| `A01234567`   | Mariana López    | Alumno                         | 2 préstamos activos (baja rechazada) |
+| `A01555888`   | Rodrigo Díaz     | Alumno                         | Multa pendiente (baja rechazada)     |
+| `A01999000`   | Carlos Pérez     | Alumno                         | Sin pendientes (baja procede)        |
+| `A01678234`   | Ana Torres       | Alumno, cuenta **inactiva**    | Acceso negado; "ya está inactivo"    |
+| `A01333444`   | Diego Castro     | Alumno con perfil **inactivo** | Acceso negado por perfil             |
+| `A01444222`   | Lucía Herrera    | Alumno **no vigente** en CIAA  | Acceso negado por vigencia           |
+
+Sin cuenta, para probar el alta: `A01777111` y `N000500`. No vigentes: `A01000999`, `N000999`.
+Formatos: Matrícula `A` + 8 dígitos; Nómina `N` + 6 dígitos.
+
+Todas las respuestas de error de la API tienen la forma
+`{ "error": { "mensaje": "...", "detalle": { ... } } }`; `detalle` es opcional.
+
+### Avance del Sprint 1
+
+- [x] Fase 0 — Esqueleto del proyecto
+- [x] Fase 1 — Base de datos (migración y semillas)
+- [ ] Fase 2 — Autenticación y RBAC (HUGUS01)
+- [ ] Fase 3 — Perfiles y usuarios (HUPRF01, HUGUS02–05)
+- [ ] Fase 4 — Libros y ejemplares (HULIB01–03)
+- [ ] Fase 5 — Consulta, ubicación y listado (HULIB04, HUUBI01, HULIS01)
+- [ ] Fase 6 — Compras (HUCOM01)
+- [ ] Fase 7 — Pruebas y cierre
