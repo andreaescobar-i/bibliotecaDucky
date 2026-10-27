@@ -1,9 +1,10 @@
 import { lazy, type ComponentType } from 'react';
 import manifest from './manifest.json';
 
-const modules = import.meta.glob<{ default: ComponentType }>('./screens/*.tsx');
+// Los identificadores de ruta conservan los enlaces existentes; file indica el archivo descriptivo.
+const modules = import.meta.glob<{ default: ComponentType }>('./screens/**/*.tsx');
 export const screens = Object.fromEntries(
-  manifest.map((n) => [n.module, lazy(modules[`./screens/${n.module}.tsx`])]),
+  manifest.map((n) => [n.module, lazy(modules[`./screens/${n.file}`])]),
 );
 export const defaultRoutes: Record<string, string> = {
   Alumno: '1-336',

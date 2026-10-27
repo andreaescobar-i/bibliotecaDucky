@@ -48,7 +48,7 @@ El conjunto inicial usa los cinco libros que aparecen en las filas del diseño. 
 
 ## Código
 
-- `src/screens/`: vistas React identificadas por el nodo original de Figma, con sus atributos `data-node-id` para facilitar la trazabilidad.
+- `src/screens/`: pantallas con nombres cortos, agrupadas por rol; las vistas reutilizadas están en `compartidas/` y los diálogos en la subcarpeta `dialogos/`.
 - `src/App.tsx`: coordinación de estado, ventanas y acciones.
 - `src/navigation.ts`: carga de pantallas y rutas iniciales por rol.
 - `src/components/`: formularios, textos dinámicos, tablas y explorador del prototipo.
@@ -61,6 +61,26 @@ El conjunto inicial usa los cinco libros que aparecen en las filas del diseño. 
 - `public/assets/`: imágenes, SVG y tipografía local. No se utilizan URLs temporales de Figma en ejecución.
 
 La tipografía Poppins procede de Google Fonts; los logotipos e iconos proceden del archivo proporcionado. Se incluye la licencia de Poppins en `public/assets/OFL-Poppins.txt`.
+
+## Organización de pantallas
+
+```text
+src/screens/
+├── administrador/     # Usuarios, Libros, Perfiles, Reportes, Solicitudes y Catálogo
+│   └── dialogos/      # Edición de usuarios, roles y perfiles
+├── bibliotecario/     # Préstamos, devoluciones, renovaciones, multas y catálogo
+│   └── dialogos/      # Pagos, libros perdidos y lista de suspendidos
+├── comprador/         # Compras
+│   └── dialogos/      # Recepción y entrega al catálogo
+└── compartidas/       # Inicio de sesión, catálogo de lectores, detalle y cuenta
+    └── dialogos/      # Formularios y ventanas usados por varios roles
+```
+
+La carpeta indica el rol, por lo que los archivos se llaman `Usuarios.tsx`,
+`Libros.tsx` o `Solicitudes.tsx`. Alumno, Maestro y Colaborador reutilizan
+`compartidas/Catalogo.tsx` y `compartidas/Cuenta.tsx`. Las versiones de catálogo y
+libros que tienen interfaces distintas para cada rol permanecen en su carpeta correspondiente.
+Los diálogos comunes se mantienen en un solo archivo dentro de `compartidas/dialogos/`.
 
 ## Formato del código
 
@@ -78,6 +98,7 @@ npm run format:check
 npm run build
 ```
 
-Los nombres numéricos de `src/screens/` corresponden a los nodos originales de Figma;
-`src/manifest.json` relaciona cada identificador con el nombre de su pantalla o diálogo.
+`src/manifest.json` relaciona cada identificador de ruta (`module`) con el archivo
+descriptivo (`file`) y el nombre de su pantalla o diálogo. Los identificadores de ruta
+y los atributos `data-node-id` conservan la referencia original de Figma.
 Los recursos de `public/assets/` y los archivos generados de `dist/` quedan fuera del formateo.
