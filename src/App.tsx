@@ -4,8 +4,9 @@ import { DesignContext, type DesignState, Action } from './design-controls';
 import { loadData, saveData, type Data, roles, addBusinessDays } from './model';
 
 import { PrototypeExplorer } from './components/PrototypeExplorer';
+import { SessionNavigation } from './components/SessionNavigation';
 import { download } from './utils/download';
-import { screens, defaultRoutes, normalizeText } from './navigation';
+import { screens, defaultRoutes, normalizeText, routeForRole } from './navigation';
 
 const DEFAULT_BOOK_ID = '2';
 
@@ -15,7 +16,9 @@ export default function App() {
   const [role, setRole] = useState(() => sessionStorage.getItem('ducky-role') || 'Alumno');
   const [route, setRoute] = useState(() => {
     const r = location.hash.slice(1);
-    return manifest.some((n) => n.module === r && !n.overlay) ? r : '27-759';
+    return manifest.some((n) => n.module === r && !n.overlay)
+      ? routeForRole(r, sessionStorage.getItem('ducky-role') || 'Alumno')
+      : '27-759';
   });
 
   // Selección actual y valores de los formularios.
@@ -30,6 +33,9 @@ export default function App() {
   const [page, setPage] = useState(1);
   // Estado de la interfaz y referencias para foco y avisos.
   const [menu, setMenu] = useState<string[]>([]);
+  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
+  const menuAnchor = useRef<HTMLElement | null>(null);
+  const menuElement = useRef<HTMLDivElement | null>(null);
   const [toast, setToast] = useState('');
   const [explorer, setExplorer] = useState(false);
   const [chat, setChat] = useState<{ who: string; text: string }[]>([]);
@@ -46,7 +52,9 @@ export default function App() {
     const onHash = () => {
       const r = location.hash.slice(1);
       if (manifest.some((n) => n.module === r && !n.overlay)) {
-        setRoute(r);
+        const next = routeForRole(r, sessionStorage.getItem('ducky-role') || 'Alumno');
+        setRoute(next);
+        if (next !== r) location.hash = next;
         setOverlay('');
         setFields({});
         setQuery('');
@@ -71,6 +79,7 @@ export default function App() {
     timer.current = setTimeout(() => setToast(''), 5000);
   }
   function go(id: string) {
+    id = routeForRole(id, sessionStorage.getItem('ducky-role') || role);
     setRoute(id);
     location.hash = id;
     setOverlay('');
@@ -105,12 +114,17 @@ export default function App() {
     notify(actionName);
   }
   const field = (label: string, value: string) => {
-    setFields((f) => ({ ...f, [label]: value }));
+    const isSearch =
+      !overlay &&
+      /buscar|^matrícula o nombre$|^título, ISBN o clave$|^folio, matrícula o clave del ejemplar$/i.test(
+        label,
+      );
+    setFields((f) => ({ ...f, [label]: value, ...(isSearch ? { __searched: '1' } : {}) }));
+    if (isSearch) {
+      setQuery(value);
+      setPage(1);
+    }
     if (['207-1669', '2081-3418'].includes(route) && !overlay) {
-      if (/Buscar/.test(label)) {
-        setQuery(value);
-        setPage(1);
-      }
       if (label === 'Estado') setFilter(value);
     }
   };
@@ -187,7 +201,7 @@ export default function App() {
       actionName === 'ver en catalogo' ||
       actionName === 'volver al catalogo'
     ) {
-      go(role === 'Bibliotecario' ? '272-2449' : '1-336');
+      go(role === 'Administrador' ? '207-1228' : role === 'Bibliotecario' ? '272-2449' : '1-336');
       return;
     }
     if (actionName === 'mi cuenta') {
@@ -247,7 +261,7 @@ export default function App() {
       return;
     }
     if (actionName === 'mi rol') {
-      open('211-941');
+      notify('Para cambiar de rol, cierra sesión e ingresa con el rol deseado.');
       return;
     }
     if (actionName === 'roles') {
@@ -263,9 +277,7 @@ export default function App() {
         });
         close();
       } else {
-        setRole(chosen);
-        sessionStorage.setItem('ducky-role', chosen);
-        go(defaultRoutes[chosen]);
+        notify('Para cambiar de rol, cierra sesión e ingresa con el rol deseado.');
       }
       return;
     }
@@ -775,6 +787,40 @@ export default function App() {
     notify('Selecciona una opción del menú para continuar.');
   }
   useEffect(() => {
+    if (!menu.length) return;
+    const position = () => {
+      const rect = menuAnchor.current?.getBoundingClientRect();
+      if (!rect) return;
+      const width = menuElement.current?.offsetWidth || 220;
+      setMenuPosition({
+        top: rect.bottom + 8,
+        left: Math.max(8, Math.min(rect.left, window.innerWidth - width - 8)),
+      });
+    };
+    const dismiss = (event: PointerEvent) => {
+      const target = event.target as Node;
+      if (!menuElement.current?.contains(target) && !menuAnchor.current?.contains(target))
+        setMenu([]);
+    };
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setMenu([]);
+        menuAnchor.current?.focus();
+      }
+    };
+    position();
+    window.addEventListener('resize', position);
+    window.addEventListener('scroll', position, true);
+    document.addEventListener('pointerdown', dismiss);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      window.removeEventListener('resize', position);
+      window.removeEventListener('scroll', position, true);
+      document.removeEventListener('pointerdown', dismiss);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [menu]);
+  useEffect(() => {
     if (!overlay) return;
     const previous = document.activeElement as HTMLElement;
     const node = modal.current;
@@ -834,6 +880,9 @@ export default function App() {
     const text = control.innerText?.trim();
     if (text && text.length < 150) {
       e.preventDefault();
+      if (/^(libros|administracion|operaciones)/.test(normalizeText(text))) {
+        menuAnchor.current = control;
+      }
       action(text, control.closest<HTMLElement>('[data-record]')?.dataset.record);
     }
   }
@@ -859,6 +908,14 @@ export default function App() {
   return (
     <DesignContext.Provider value={ctx}>
       <div ref={root} onClick={delegate} onKeyDown={delegate}>
+        {route !== '27-759' && (
+          <SessionNavigation
+            onMenu={(label, anchor) => {
+              menuAnchor.current = anchor;
+              action(label);
+            }}
+          />
+        )}
         <div
           className="screen-canvas"
           key={route + '-' + revision}
@@ -869,7 +926,12 @@ export default function App() {
           </Suspense>
         </div>
         {menu.length > 0 && (
-          <div className="quick-menu">
+          <div
+            ref={menuElement}
+            className="quick-menu"
+            style={menuPosition}
+            aria-label="Opciones de navegación"
+          >
             {menu.map((m) => (
               <button key={m} onClick={() => action(m)}>
                 {m}
@@ -947,9 +1009,8 @@ export default function App() {
             role={role}
             onClose={() => setExplorer(false)}
             onRoleChange={(chosen) => {
-              setRole(chosen);
-              sessionStorage.setItem('ducky-role', chosen);
-              go(defaultRoutes[chosen]);
+              if (chosen !== role)
+                notify('Para cambiar de rol, cierra sesión e ingresa con el rol deseado.');
             }}
             go={go}
             open={open}

@@ -22,6 +22,31 @@
 .screen-canvas [data-name='Body'] {
   min-height: 100vh;
 }
+.screen-canvas [data-node-id='27:760'] {
+  height: auto;
+  min-height: 100dvh;
+  min-width: 0;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+}
+.screen-canvas [data-node-id='27:782'] {
+  position: relative;
+  top: auto;
+  left: auto;
+  transform: none;
+  width: 435px;
+  max-width: 100%;
+}
+.screen-canvas [data-node-id='27:782'] :is(.design-input, .design-select) {
+  width: 100%;
+}
+.screen-canvas [data-node-id='27:782'] > button {
+  max-width: 100%;
+}
+.screen-canvas [data-node-id='27:782'] .design-input > [data-name='Search'] {
+  left: 20px;
+}
 .design-input > p {
   visibility: hidden;
 }
@@ -297,11 +322,96 @@
 .modal-extra .action {
   margin-top: 12px;
 }
+.session-header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  min-height: 76px;
+  padding: 8px 32px;
+  background: white;
+  border-bottom: 1px solid #d4d4d4;
+}
+.session-header > img {
+  width: 183px;
+  height: 60px;
+  object-fit: contain;
+}
+.session-header nav {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+.session-header nav button {
+  padding: 10px 14px;
+  color: #00a99b;
+  border-radius: 8px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.session-header nav button:hover {
+  background: #eefcfa;
+}
+.session-profile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-align: left;
+  font-size: 12px;
+}
+.session-profile small {
+  display: block;
+  color: #777;
+}
+.session-avatar {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #262626;
+  color: white;
+}
+.session-logout {
+  padding: 10px;
+  border: 1px solid #007566;
+  color: #007566;
+  border-radius: 8px;
+  font-size: 14px;
+  white-space: nowrap;
+}
+.session-header ~ .screen-canvas [data-name='header'],
+.session-header ~ .screen-canvas [data-name='Header'] {
+  display: none;
+}
+@media (max-width: 1000px) {
+  .session-header {
+    flex-wrap: wrap;
+    padding: 8px 16px;
+    gap: 12px;
+  }
+  .session-header nav {
+    order: 4;
+    flex-basis: 100%;
+    overflow-x: auto;
+  }
+  .session-profile {
+    margin-left: auto;
+  }
+}
+@media (max-width: 480px) {
+  .session-header > img {
+    width: 130px;
+  }
+  .session-profile > span:last-child {
+    display: none;
+  }
+  .session-header nav button {
+    padding: 10px;
+  }
+}
 .quick-menu {
   position: fixed;
-  top: 66px;
-  left: 50%;
-  transform: translateX(-50%);
   background: white;
   box-shadow: 0 8px 30px #0002;
   border: 1px solid #ddd;
@@ -309,6 +419,9 @@
   padding: 8px;
   z-index: 60;
   min-width: 180px;
+  max-width: calc(100vw - 16px);
+  max-height: 70vh;
+  overflow-y: auto;
 }
 .quick-menu button {
   display: block;
@@ -607,6 +720,7 @@
   }
 }
 @media print {
+  .session-header,
   .prototype-tools,
   .explorer,
   .toast,
@@ -959,6 +1073,53 @@
 }
 
 /* Keep room for the focus ring inside the scrollable bibliographic form. */
+.screen-canvas [data-name='Toolbar'] {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  align-items: flex-end;
+}
+.screen-canvas [data-name='Toolbar'] > :is([data-name='Field'], [data-name='Field-search']) {
+  flex: 1 1 240px;
+  min-width: 0;
+  height: auto;
+}
+.screen-canvas [data-name='Toolbar'] :is([data-name='Input · DS'], .design-input, .design-select) {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  height: 40px;
+  border-radius: 6px;
+}
+.screen-canvas [data-name='Toolbar'] .design-input > [data-name='Base'] {
+  border: 1px solid #e1e1e1;
+  border-radius: 6px;
+  box-shadow: none;
+  background: white;
+}
+.screen-canvas [data-name='Toolbar'] .design-select select {
+  border: 1px solid #e1e1e1;
+  border-radius: 6px;
+  background-color: white;
+}
+.screen-canvas [data-name='Toolbar'] .design-select > div {
+  z-index: 1;
+}
+.screen-canvas [data-name='Toolbar'] .design-input input {
+  font-size: 14px;
+}
+.screen-canvas [data-name='Toolbar'] .design-input > [data-name='Search'] {
+  left: 12px;
+}
+.screen-canvas [data-name='Toolbar'] .design-select > [data-name='dropdown-input'] {
+  width: 100%;
+}
+.screen-canvas [data-name='Toolbar'] :is(.design-input, .design-select):focus-within::after {
+  border-radius: 8px;
+}
 .modal-window [data-name='Campos bibliográficos y recepción'] {
   padding: 4px;
 }

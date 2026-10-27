@@ -256,7 +256,7 @@ export function DynamicSlot({ children, ...props }: HTMLAttributes<HTMLDivElemen
       );
     }
     if (id === '174:3022') {
-      const books = s.data.books.filter((b) => matches(b.title, b.code));
+      const books = s.data.books.filter((b) => matches(b.title, b.isbn, b.code));
       content = (
         <div className="search-result">
           {books.length ? (

@@ -124,7 +124,7 @@ export default function InicioSesion() {
                 data-name="Base"
               />
               <div
-                className="-translate-y-1/2 absolute left-[12px] size-[18px] top-1/2"
+                className="-translate-y-1/2 absolute size-[18px] top-1/2"
                 data-node-id="I65:3744;65:3043"
                 data-name="Search"
               >
@@ -166,7 +166,7 @@ export default function InicioSesion() {
                 data-name="Base"
               />
               <div
-                className="-translate-y-1/2 absolute left-[12px] size-[18px] top-1/2"
+                className="-translate-y-1/2 absolute size-[18px] top-1/2"
                 data-node-id="I65:3757;65:3043"
                 data-name="Search"
               >
