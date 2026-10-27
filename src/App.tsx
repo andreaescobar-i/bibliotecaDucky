@@ -8,6 +8,9 @@ import { SessionNavigation } from './components/SessionNavigation';
 import { download } from './utils/download';
 import { screens, defaultRoutes, normalizeText, routeForRole } from './navigation';
 
+import { PurchaseDialog } from './components/PurchaseDialog';
+import { validateLines, findPurchase } from './purchases';
+
 const DEFAULT_BOOK_ID = '2';
 
 export default function App() {
@@ -658,25 +661,17 @@ export default function App() {
       return;
     }
     if (actionName === 'registrar peticion') {
-      const title = input('Título solicitado'),
-        requester = input('Solicitante o facultad'),
-        cost = Number(input('Costo total estimado del lote (MXN)'));
-      if (!title || !requester || !cost || cost <= 0) {
-        notify('Completa título, solicitante y un costo mayor actionName cero.');
+      notify('Prepara las partidas y usa Enviar a Tesorería.');
+      return;
+    }
+    if (actionName === 'consultar solicitud') {
+      const folio = input('Folio de solicitud').trim();
+      const request = findPurchase(data.requests, folio);
+      if (!request) {
+        notify('No se encontró una solicitud con ese folio.');
         return;
       }
-      update('Petición registrada', title, (d) => {
-        d.requests.push({
-          id: `SOL-${Date.now().toString().slice(-6)}`,
-          title,
-          requester,
-          cost,
-          quantity: Number(input('Cantidad de ejemplares solicitados') || 1),
-          state: 'Por autorizar',
-          received: 0,
-        });
-      });
-      close();
+      open('2081-2172', request.id);
       return;
     }
     if (actionName === 'revisar') {
@@ -691,35 +686,39 @@ export default function App() {
       return;
     }
     if (actionName === 'confirmar revision') {
-      update('Revisión confirmada', current, (d) => {
-        const r = d.requests.find((r) => r.id === current);
-        if (r) r.state = 'En Tesorería';
+      const request = data.requests.find((r) => r.id === current);
+      if (
+        role !== 'Comprador de libros' ||
+        sessionStorage.getItem('ducky-role') !== role ||
+        !request ||
+        request.state !== 'Por autorizar'
+      ) {
+        notify('Solo se pueden enviar solicitudes pendientes con una sesión de comprador.');
+        return;
+      }
+      try {
+        validateLines(request.lines || []);
+      } catch (error) {
+        notify((error as Error).message);
+        return;
+      }
+      update('Solicitud enviada a Tesorería', current, (d) => {
+        const r = d.requests.find((r) => r.id === current)!;
+        r.state = 'En Tesorería';
+        r.sentAt = new Date().toISOString();
       });
-      notify('Solicitud remitida actionName Tesorería en esta demostración.');
       return;
     }
     if (actionName === 'registrar recepcion') {
       if (overlay !== '211-1260') {
-        open('211-1260');
+        open('211-1260', current);
         return;
       }
-      const r = data.requests.find((r) => r.id === current);
-      const quantity = Number(input('Cantidad recibida') || 1);
-      if (!r || quantity < 1 || quantity > r.quantity) {
-        notify('La recepción debe corresponder actionName la cantidad solicitada.');
-        return;
-      }
-      update('Recepción registrada', current, (d) => {
-        const r = d.requests.find((r) => r.id === current)!;
-        r.received = quantity;
-        r.state = 'Recibido';
-      });
-      open('2081-2189');
       return;
     }
-    if (actionName === 'confirmar entrega actionName catalogo') {
+    if (actionName === 'confirmar entrega a catalogo') {
       const r = data.requests.find((r) => r.id === current);
-      if (!r || !r.received) {
+      if (role !== 'Comprador de libros' || !r || r.state !== 'Recibido') {
         notify('Registra la recepción del lote antes de entregarlo.');
         return;
       }
@@ -922,6 +921,27 @@ export default function App() {
           inert={overlay ? true : undefined}
         >
           <Suspense fallback={<p className="loading">Cargando biblioteca…</p>}>
+            {route === '207-1669' && (
+              <form
+                className="purchase-dialog"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  action('Consultar solicitud');
+                }}
+              >
+                <label>
+                  Folio de solicitud
+                  <input
+                    aria-label="Folio de solicitud"
+                    value={fields['Folio de solicitud'] || ''}
+                    onChange={(e) => field('Folio de solicitud', e.target.value)}
+                  />
+                </label>
+                <button className="action" type="submit">
+                  Consultar solicitud
+                </button>
+              </form>
+            )}
             <Screen />
           </Suspense>
         </div>
@@ -960,19 +980,42 @@ export default function App() {
                 ×
               </button>
               <Suspense fallback={<p>Cargando…</p>}>
-                <Overlay />
+                {['211-1204', '211-1260', '2081-2172', '2081-2208'].includes(overlay) ? (
+                  <PurchaseDialog
+                    mode={overlay}
+                    request={selectedRequest}
+                    data={data}
+                    canEdit={
+                      role === 'Comprador de libros' &&
+                      sessionStorage.getItem('ducky-role') === role
+                    }
+                    close={close}
+                    commit={(purchase, event) =>
+                      update(`${event} · ${purchase.id}`, purchase.id, (d) => {
+                        const index = d.requests.findIndex((r) => r.id === purchase.id);
+                        if (index < 0) d.requests.push(purchase);
+                        else d.requests[index] = purchase;
+                      })
+                    }
+                  />
+                ) : (
+                  <Overlay />
+                )}
               </Suspense>
               {overlay === '2081-2172' && selectedRequest && (
                 <div className="modal-extra">
                   <p>
                     {selectedRequest.id} · {selectedRequest.title} · {selectedRequest.state}
                   </p>
+                  {selectedRequest.state === 'Por autorizar' && (
+                    <Action primary>Confirmar revisión</Action>
+                  )}
                   {selectedRequest.state === 'En Tesorería' && (
                     <Action primary>Consultar autorización</Action>
                   )}
-                  {selectedRequest.state === 'Autorizado' && (
-                    <Action primary>Registrar recepción</Action>
-                  )}
+                  {['En Tesorería', 'Autorizado', 'Recibido parcialmente'].includes(
+                    selectedRequest.state,
+                  ) && <Action primary>Registrar recepción</Action>}
                   {selectedRequest.state === 'Recibido' && (
                     <button className="action primary" onClick={() => open('2081-2189')}>
                       Entregar al catálogo

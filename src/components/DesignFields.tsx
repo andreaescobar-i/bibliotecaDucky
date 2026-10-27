@@ -65,7 +65,10 @@ export function DesignInput({
         value={value}
         placeholder={initialValue.startsWith('Ej.') ? initialValue : ''}
         autoComplete={type === 'password' ? 'current-password' : 'off'}
-        style={{ paddingLeft: props['data-name'] === 'Left icon' ? (state.route === '27-759' ? 46 : 38) : 14 }}
+        style={{
+          paddingLeft:
+            props['data-name'] === 'Left icon' ? (state.route === '27-759' ? 46 : 38) : 14,
+        }}
         onChange={(e) => {
           setValue(e.target.value);
           state.field(fieldLabel, e.target.value);
@@ -121,6 +124,9 @@ export function DesignSelect({
                         'Pendiente',
                         'Registrada',
                         'Por autorizar',
+                        'En Tesorería',
+                        'Recibido parcialmente',
+                        'Rechazado',
                         'Autorizado',
                         'Recibido',
                         'Entregado al catálogo',

@@ -23,7 +23,9 @@ export type Book = {
 };
 export { seedBooks, initialData } from './data/demo-data';
 
-export type Data = typeof initialData;
+export type Data = Omit<typeof initialData, 'requests'> & {
+  requests: import('./purchases').Purchase[];
+};
 const STORAGE_KEY = 'ducky-data-v1';
 
 export function loadData(): Data {

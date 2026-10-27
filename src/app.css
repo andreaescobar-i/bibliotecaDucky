@@ -1123,3 +1123,30 @@
 .modal-window [data-name='Campos bibliográficos y recepción'] {
   padding: 4px;
 }
+
+.purchase-dialog {
+  padding: 28px;
+  display: grid;
+  gap: 16px;
+}
+.purchase-dialog label {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.purchase-dialog input {
+  padding: 10px;
+  border: 1px solid #b8c5c3;
+  border-radius: 6px;
+  width: 100%;
+  box-sizing: border-box;
+}
+.purchase-dialog fieldset {
+  min-width: 0;
+  border: 1px solid #b8c5c3;
+  border-radius: 8px;
+  padding: 16px;
+}
+.purchase-dialog [role='alert'] {
+  color: #a32020;
+}
