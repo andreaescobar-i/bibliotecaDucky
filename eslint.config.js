@@ -21,13 +21,14 @@ const ARCHIVOS_BACKEND = [
   'servicios/**/*.js',
   'utilidades/**/*.js',
   'vistas/**/*.js',
-  'tests/salud.test.mjs',
-  'tests/integracion/**/*.mjs',
+  'tests/**/*.test.mjs',
+  'tests/integracion/*.mjs',
 ];
 
 export default [
   {
-    ignores: ['node_modules/', 'dist/', 'src/', 'public/'],
+    // tests/purchases.test.mjs pertenece al front
+    ignores: ['node_modules/', 'dist/', 'src/', 'public/', 'tests/purchases.test.mjs'],
   },
   {
     files: ARCHIVOS_BACKEND,

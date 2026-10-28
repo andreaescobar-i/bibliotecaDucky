@@ -46,7 +46,7 @@ export default function PerfilBloqueado() {
       >
         Perfil Alumno no desactivado
       </DesignText>
-      <div
+      <DynamicSlot
         className="[word-break:break-word] font-['Poppins:Medium'] h-[100px] leading-[0] not-italic relative shrink-0 text-[14px] text-[color:var(--text\/2,#4e5969)] w-[580px] whitespace-pre-wrap"
         data-node-id="373:1915"
       >
@@ -56,7 +56,7 @@ export default function PerfilBloqueado() {
         <DesignText className="leading-[22px]">
           Reasigne las cuentas activas antes de desactivar el perfil.
         </DesignText>
-      </div>
+      </DynamicSlot>
       <div
         className="content-stretch flex items-center justify-end overflow-clip relative shrink-0 w-full"
         data-node-id="373:1916"

@@ -1,31 +1,40 @@
 import type { HTMLAttributes, ReactNode } from 'react';
-import { money } from '../model';
+import { dateText } from '../model';
 import { useDesign } from '../context/DesignContext';
 import { Action } from './Action';
+import { bookPdfUrl } from '../api';
+import { PAGE_SIZE, catalogBooks, filteredRequests, filteredUsers, managedBooks } from '../listas';
 
 function Table({ headers, children }: { headers: string[]; children: ReactNode }) {
   return (
     <div className="live-table-wrap">
       <table className="live-table">
-        <thead>
-          <tr>
-            {headers.map((h) => (
-              <th key={h}>{h}</th>
-            ))}
-          </tr>
-        </thead>
+        {headers.length > 0 && (
+          <thead>
+            <tr>
+              {headers.map((h) => (
+                <th key={h}>{h}</th>
+              ))}
+            </tr>
+          </thead>
+        )}
         <tbody>{children}</tbody>
       </table>
     </div>
   );
 }
+const Empty = ({ columns, text }: { columns: number; text: string }) => (
+  <tr>
+    <td colSpan={columns} className="muted">
+      {text}
+    </td>
+  </tr>
+);
 export function DynamicSlot({ children, ...props }: HTMLAttributes<HTMLDivElement>) {
   const s = useDesign();
   const id = String(props['data-node-id']);
   const name = String(props['data-name']);
   let content: ReactNode = null;
-  const query = s.query.toLowerCase();
-  const matches = (...v: unknown[]) => v.join(' ').toLowerCase().includes(query);
   const badge = (v: string) => (
     <span
       className={'badge ' + (v === 'Prestado' ? 'dark' : v === 'No disponible' ? 'dashed' : '')}
@@ -33,28 +42,12 @@ export function DynamicSlot({ children, ...props }: HTMLAttributes<HTMLDivElemen
       {v}
     </span>
   );
+  const page = (list: any[]) => list.slice((s.page - 1) * PAGE_SIZE, s.page * PAGE_SIZE);
   if (name === 'catalog_results') {
-    let books = s.data.books.filter(
-      (b) =>
-        matches(
-          s.fields.Criterio === 'Título'
-            ? b.title
-            : s.fields.Criterio === 'Autor'
-              ? b.author
-              : s.fields.Criterio === 'Editorial'
-                ? b.publisher
-                : s.fields.Criterio === 'Clave'
-                  ? b.code
-                  : [b.title, b.author, b.code, b.publisher].join(' '),
-        ) &&
-        (!s.filter || s.filter === 'Todos' || [b.use, b.state].includes(s.filter)),
-    );
-    if (s.sort === 'Autor A–Z') books = [...books].sort((a, b) => a.author.localeCompare(b.author));
-    if (s.sort === 'Título A–Z') books = [...books].sort((a, b) => a.title.localeCompare(b.title));
-    if (s.sort === 'Título Z–A') books = [...books].sort((a, b) => b.title.localeCompare(a.title));
+    const books = catalogBooks(s);
     content = (
       <div className="catalog-rows">
-        {books.slice((s.page - 1) * 5, s.page * 5).map((b) => (
+        {page(books).map((b) => (
           <article className="book-row" key={b.id} data-record={b.id}>
             <div className="book-cover">LIBRO</div>
             <div className="book-info">
@@ -92,220 +85,188 @@ export function DynamicSlot({ children, ...props }: HTMLAttributes<HTMLDivElemen
       </div>
     );
   } else if (id === '241:3426') {
+    const users = filteredUsers(s);
     content = (
       <Table
         headers={['ID / matrícula', 'Nombre', 'Correo institucional', 'Rol', 'Estado', 'Acciones']}
       >
-        {s.data.users
-          .filter(
-            (u) =>
-              matches(u.id, u.name, u.email) &&
-              (!s.filter ||
-                ['Todos', 'Todos los roles'].includes(s.filter) ||
-                u.role === s.filter ||
-                (s.filter === 'Activo' ? u.active : s.filter === 'Inactivo' ? !u.active : true)),
-          )
-          .map((u) => (
-            <tr key={u.id}>
-              <td>{u.id}</td>
-              <td>{u.name}</td>
-              <td>{u.email}</td>
-              <td>{badge(u.role)}</td>
-              <td>{u.active ? 'Activo' : 'Inactivo'}</td>
-              <td>
-                <Action record={u.id}>Editar</Action>
-                <Action record={u.id}>Roles</Action>
-                <Action record={u.id}>{u.active ? 'Baja' : 'Reactivar'}</Action>
-              </td>
-            </tr>
-          ))}
+        {users.map((u) => (
+          <tr key={u.id}>
+            <td>{u.id}</td>
+            <td>{u.name}</td>
+            <td>{u.email}</td>
+            <td>{badge(u.role)}</td>
+            <td>{u.active ? 'Activo' : 'Inactivo'}</td>
+            <td>
+              <Action record={u.id}>Editar</Action>
+              <Action record={u.id}>Roles</Action>
+              <Action record={u.id}>{u.active ? 'Baja' : 'Reactivar'}</Action>
+            </td>
+          </tr>
+        ))}
+        {!users.length && <Empty columns={6} text="No hay usuarios que coincidan." />}
       </Table>
     );
   } else if (['247:2890', '247:3115', '207:1276'].includes(id)) {
+    const books = managedBooks(s);
     content = (
       <Table
         headers={['Clave', 'Título y autor', 'Ejemplares', 'Tipo de uso', 'Estado', 'Acciones']}
       >
-        {s.data.books
-          .filter(
-            (b) =>
-              matches(b.code, b.title, b.author) &&
-              (!s.filter || s.filter === 'Todos' || b.use === s.filter),
-          )
-          .slice((s.page - 1) * 5, s.page * 5)
-          .map((b) => (
-            <tr key={b.id}>
-              <td>{b.code}</td>
-              <td>
-                {b.title}
-                <p className="muted">{b.author}</p>
-              </td>
-              <td>{b.copies}</td>
-              <td>{badge(b.use)}</td>
-              <td>{b.state === 'No disponible' ? 'Inactivo' : 'Activo'}</td>
-              <td>
-                <Action record={b.id}>Editar</Action>
-                {id === '207:1276' ? (
-                  <>
-                    <Action record={b.id}>Etiqueta</Action>
-                    <Action record={b.id}>Baja</Action>
-                  </>
-                ) : (
-                  <>
-                    <Action record={b.id}>Ejemplares</Action>
-                    <Action record={b.id}>Historial</Action>
-                  </>
-                )}
-              </td>
-            </tr>
-          ))}
+        {page(books).map((b) => (
+          <tr key={b.id}>
+            <td>{b.code}</td>
+            <td>
+              {b.title}
+              <p className="muted">{b.author}</p>
+            </td>
+            <td>{b.copies}</td>
+            <td>{badge(b.use)}</td>
+            <td>{b.copies > 0 ? 'Activo' : 'Sin ejemplares'}</td>
+            <td>
+              <Action record={b.id}>Editar</Action>
+              {id === '207:1276' ? (
+                <>
+                  <Action record={b.id}>Etiqueta</Action>
+                  <Action record={b.id}>Baja</Action>
+                </>
+              ) : (
+                <>
+                  <Action record={b.id}>Ejemplares</Action>
+                  <Action record={b.id}>Historial</Action>
+                </>
+              )}
+            </td>
+          </tr>
+        ))}
+        {!books.length && <Empty columns={6} text="No hay libros que coincidan." />}
       </Table>
     );
   } else if (['207:1727', '2081:3458'].includes(id)) {
+    const requests = filteredRequests(s);
     content = (
       <Table
         headers={['Folio', 'Libro solicitado', 'Solicitante', 'Costo estimado', 'Estado', 'Acción']}
       >
-        {s.data.requests
-          .filter(
-            (r) =>
-              matches(r.id, r.title, r.requester) &&
-              (!s.filter || s.filter === 'Todos' || r.state === s.filter),
-          )
-          .map((r) => (
-            <tr key={r.id}>
-              <td>{r.id}</td>
-              <td>{r.title}</td>
-              <td>{r.requester}</td>
-              <td>{r.cost.toFixed(2)}</td>
-              <td>{badge(r.state)}</td>
-              <td>
-                <Action record={r.id}>
-                  {s.role === 'Comprador de libros' ? 'Revisar' : 'Ver historial'}
-                </Action>
-              </td>
-            </tr>
-          ))}
+        {requests.map((r) => (
+          <tr key={r.id}>
+            <td>{r.id}</td>
+            <td>{r.title}</td>
+            <td>{r.requester}</td>
+            <td>{r.cost.toFixed(2)}</td>
+            <td>{badge(r.state)}</td>
+            <td>
+              <Action record={r.id}>
+                {s.role === 'Comprador de libros' ? 'Revisar' : 'Ver historial'}
+              </Action>
+            </td>
+          </tr>
+        ))}
+        {!requests.length && <Empty columns={6} text="No hay solicitudes que coincidan." />}
       </Table>
     );
-  } else if (id === '207:896') {
+  } else if (id === '2148:2159') {
+    // Roles registrados con los permisos que admiten y los perfiles que los usan
     content = (
-      <Table headers={['Alumno', 'Concepto', 'Fecha', 'Monto', 'Estado', 'Acción']}>
-        {s.data.fines
-          .filter(
-            (f) =>
-              matches(f.user) &&
-              (!s.filter ||
-                ['Todos', 'Todas'].includes(s.filter) ||
-                (s.filter === 'Registrada' ? f.paid : !f.paid)),
-          )
-          .map((f) => (
-            <tr key={f.id}>
-              <td>{f.user}</td>
-              <td>{f.reason}</td>
-              <td>12 oct 2025</td>
-              <td>{money(f.amount)}</td>
-              <td>{badge(f.paid ? 'Registrada' : 'Pendiente')}</td>
-              <td>{!f.paid && <Action record={f.id}>Registrar pago</Action>}</td>
-            </tr>
-          ))}
+      <Table headers={['Perfil / rol', 'Ámbito de acceso', 'Permisos y acciones', 'Perfiles']}>
+        {(s.data.roles || []).map((r) => (
+          <tr key={r.name}>
+            <td>{r.name}</td>
+            <td>{r.description}</td>
+            <td>{r.permissions.join(', ')}</td>
+            <td>
+              {(s.data.profiles || [])
+                .filter((p) => p.role === r.name)
+                .map((p) => `${p.name} (${p.active ? 'activo' : 'inactivo'})`)
+                .join(', ') || 'Sin perfiles'}
+            </td>
+          </tr>
+        ))}
       </Table>
     );
-  } else if (id === '7:559') {
+  } else if (id === '247:3511' || id === '6:172') {
+    const copies = s.book.copyList || [];
+    const manage = id === '247:3511';
     content = (
       <Table
-        headers={['Libro', 'Fecha de préstamo', 'Vencimiento', 'Renovaciones', 'Estado', 'Acción']}
+        headers={
+          manage
+            ? ['Ejemplar', 'Clasificación', 'Ubicación', 'Estado', 'Acciones']
+            : ['Ejemplar', 'Ubicación en biblioteca', 'Tipo de uso', 'Estado']
+        }
       >
-        {s.data.loans
-          .filter((l) => !l.returned && l.userId === 'A01234567')
-          .map((l) => (
-            <tr key={l.id}>
-              <td>{s.data.books.find((b) => b.id === l.bookId)?.title}</td>
-              <td>{l.start}</td>
-              <td>{l.due}</td>
-              <td>{l.renewals} de 2</td>
-              <td>{badge('En tiempo')}</td>
+        {copies.map((c) => (
+          <tr key={c.clave}>
+            <td>{c.clave}</td>
+            {manage && <td>{c.clasificacion || 'Sin clasificar'}</td>}
+            <td>{c.ubicacion || 'Ubicación incompleta'}</td>
+            {!manage && <td>{c.tipoUso}</td>}
+            <td>{badge(c.estado)}</td>
+            {manage && (
               <td>
-                <Action record={l.id}>Solicitar renovación</Action>
+                <Action record={c.clave}>Clasificar</Action>
+                <Action record={c.clave}>Etiqueta</Action>
+                <Action record={c.clave}>Baja</Action>
               </td>
-            </tr>
-          ))}
+            )}
+          </tr>
+        ))}
+        {!copies.length && <Empty columns={manage ? 5 : 4} text="Sin ejemplares registrados." />}
       </Table>
     );
-  } else if (['144:2196', '174:3022', '192:2732'].includes(id) && s.fields.__searched) {
-    if (id === '144:2196') {
-      const users = s.data.users.filter((u) => u.active && matches(u.name, u.id));
-      content = (
-        <div className="search-result">
-          {users.length ? (
-            users.map((u) => (
-              <div key={u.id}>
-                <h3>{u.name}</h3>
-                <p>
-                  {u.id} · {u.role} · Cuenta autorizada
-                </p>
-                <Action primary record={u.id}>
-                  Continuar con este usuario
-                </Action>
-              </div>
-            ))
-          ) : (
-            <p>No se encontró un usuario activo con esos datos.</p>
-          )}
-        </div>
-      );
-    }
-    if (id === '174:3022') {
-      const books = s.data.books.filter((b) => matches(b.title, b.isbn, b.code));
-      content = (
-        <div className="search-result">
-          {books.length ? (
-            books.map((b) => (
-              <div key={b.id}>
-                <h3>{b.title}</h3>
-                <p>
-                  {b.code} · {b.state}
-                </p>
-                {b.state === 'Disponible' && b.use === 'Préstamo externo' ? (
-                  <Action primary record={b.id}>
-                    Seleccionar ejemplar
-                  </Action>
-                ) : (
-                  <p>Este libro no admite un préstamo externo en este momento.</p>
-                )}
-              </div>
-            ))
-          ) : (
-            <p>No se encontró el libro.</p>
-          )}
-        </div>
-      );
-    }
-    if (id === '192:2732') {
-      const loans = s.data.loans.filter(
-        (l) =>
-          !l.returned && matches(l.id, l.userId, s.data.books.find((b) => b.id === l.bookId)?.code),
-      );
-      content = (
-        <div className="search-result">
-          {loans.length ? (
-            loans.map((l) => (
-              <div key={l.id}>
-                <h3>{s.data.books.find((b) => b.id === l.bookId)?.title}</h3>
-                <p>
-                  {l.id} · Vencimiento: {l.due}
-                </p>
-                <Action primary record={l.id}>
-                  Confirmar devolución
-                </Action>
-              </div>
-            ))
-          ) : (
-            <p>No hay préstamos activos que coincidan.</p>
-          )}
-        </div>
-      );
-    }
+  } else if (id === '373:1915') {
+    const accounts: any[] = s.extra.cuentas || [];
+    content = (
+      <div className="search-result">
+        <p>
+          {accounts.length} cuenta{accounts.length === 1 ? '' : 's'} activa
+          {accounts.length === 1 ? '' : 's'} asignada{accounts.length === 1 ? '' : 's'}:
+        </p>
+        {accounts.map((c) => (
+          <p key={c.identificador}>
+            {c.identificador} — {c.nombre}
+          </p>
+        ))}
+        <p>Reasigne las cuentas activas antes de desactivar el perfil.</p>
+      </div>
+    );
+  } else if (id === '342:1842') {
+    content = (
+      <div className="search-result">
+        <p>{s.extra.mensaje}</p>
+        {s.extra.area && <p>Área a la que debes acudir: {s.extra.area}.</p>}
+      </div>
+    );
+  } else if (id === '2189:2126') {
+    const delivered = s.data.requests.filter((r) => r.state === 'Entregado al catálogo');
+    content = delivered.length ? (
+      // Los encabezados ya están en el diseño de la ventana
+      <Table headers={[]}>
+        {delivered.map((r) => (
+          <tr key={r.id}>
+            <td>
+              {r.title}
+              <p className="muted">{r.id}</p>
+            </td>
+            <td>{r.received} ejemplar(es)</td>
+            <td>Entregado el {dateText(r.deliveredAt)}</td>
+          </tr>
+        ))}
+      </Table>
+    ) : (
+      <p className="muted">
+        Aún no hay libros entregados al encargado del catálogo. Las entregas confirmadas aparecerán
+        aquí.
+      </p>
+    );
+  } else if (id === '2196:2031') {
+    content = s.book.code ? (
+      <iframe
+        className="pdf-frame"
+        title={`PDF de ${s.book.title}`}
+        src={bookPdfUrl(s.book.code)}
+      />
+    ) : null;
   }
   return content !== null ? (
     <div

@@ -7,6 +7,7 @@
 
 import ENTORNO from '../config/entorno.js';
 import ErrorAplicacion from '../utilidades/errorAplicacion.js';
+import * as errorVista from '../vistas/errorVista.js';
 
 const MENSAJE_ERROR_INTERNO = 'Ocurrió un error inesperado; intenta nuevamente';
 
@@ -54,11 +55,9 @@ function manejarErrores(err, req, res, _next) {
     mensaje = 'El cuerpo de la petición no es un JSON válido';
   }
 
-  const cuerpo = { error: { mensaje } };
-  if (esControlado && err.detalle !== undefined) {
-    cuerpo.error.detalle = err.detalle;
-  }
-  res.status(estadoHttp).json(cuerpo);
+  res
+    .status(estadoHttp)
+    .json(errorVista.formatearError(mensaje, esControlado ? err.detalle : undefined));
 }
 
 export { rutaNoEncontrada, manejarErrores };

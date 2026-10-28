@@ -75,7 +75,7 @@ export default function Ejemplares() {
       >
         4
       </DesignText>
-      <div
+      <DynamicSlot
         className="content-stretch flex flex-col gap-[12px] items-start overflow-clip relative shrink-0 w-[864px]"
         data-node-id="247:3511"
         data-name="Tabla · Ejemplares"
@@ -368,7 +368,7 @@ export default function Ejemplares() {
             />
           </div>
         </div>
-      </div>
+      </DynamicSlot>
       <div
         className="content-stretch cursor-pointer flex items-center justify-between relative shrink-0 w-[854px]"
         data-node-id="2123:4334"

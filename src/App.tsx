@@ -1,21 +1,68 @@
 import React, { useState, useEffect, useRef, Suspense } from 'react';
 import manifest from './manifest.json';
 import { DesignContext, type DesignState, Action } from './design-controls';
-import { loadData, saveData, type Data, roles, addBusinessDays } from './model';
+import { emptyData, EMPTY_BOOK, type Data, roles } from './model';
 
-import { PrototypeExplorer } from './components/PrototypeExplorer';
 import { SessionNavigation } from './components/SessionNavigation';
-import { download } from './utils/download';
 import { screens, defaultRoutes, normalizeText, routeForRole } from './navigation';
+import { pageCount, pagedList } from './listas';
 
 import { PurchaseDialog } from './components/PurchaseDialog';
 import { validateLines, findPurchase } from './purchases';
+import {
+  api,
+  activeCopies,
+  ApiError,
+  bookHistory,
+  bookPrintUrl,
+  changePassword,
+  currentSession,
+  loadRemoteData,
+  login,
+  logout,
+  purchaseDetail,
+  type Session,
+} from './api';
 
-const DEFAULT_BOOK_ID = '2';
+// Pantallas y ventanas de sprints posteriores: se muestran sin datos hasta que tengan su API.
+const LATER_SPRINTS: Record<string, [string, string]> = {
+  '7-439': ['Mi cuenta: préstamos y adeudos', 'Sprint 2'],
+  '7-1177': ['Registrar préstamo', 'Sprint 2'],
+  '162-2206': ['Registrar préstamo', 'Sprint 2'],
+  '174-3080': ['Registrar préstamo', 'Sprint 2'],
+  '182-571': ['Comprobante de préstamo', 'Sprint 2'],
+  '182-908': ['Devolución', 'Sprint 2'],
+  '207-712': ['Renovación', 'Sprint 2'],
+  '207-849': ['Multas y pagos', 'Sprint 3'],
+  '207-1046': ['Alumnos suspendidos', 'Sprint 3'],
+  '211-962': ['Registrar pago', 'Sprint 3'],
+  '211-1005': ['Reportar libro perdido', 'Sprint 3'],
+  '211-1194': ['Lista de suspendidos', 'Sprint 3'],
+  '207-1430': ['Reportes e inventario', 'Sprint 5'],
+};
+// La API separa la ubicación en estante y fila: "LIT · A1", "LIT-A1" o "LIT/A1"
+const LOCATION_FORMAT = /^(estante\s+)?[^\s·/-]+\s*[·/-]\s*\S+$/i;
+const LOCATION_HINT = 'Escribe la ubicación como estante y fila, por ejemplo LIT · A1 o LIT-A1.';
+
+// Opción de la baja desde Gestión de catálogo: un ejemplar o la ficha con todos sus ejemplares
+const REMOVAL_CHOICE = 'Qué dar de baja';
+const WHOLE_BOOK = 'LIBRO_COMPLETO';
+function LaterSprint({ id }: { id: string }) {
+  const [title, sprint] = LATER_SPRINTS[id];
+  return (
+    <section className="purchase-dialog later-sprint" aria-label={title}>
+      <h2>{title}</h2>
+      <p>
+        Esta función se entrega en el {sprint}. Aún no está conectada a la base de datos, por eso no
+        se muestran datos.
+      </p>
+    </section>
+  );
+}
 
 export default function App() {
   // Datos persistidos y sesión.
-  const [data, setData] = useState(loadData);
+  const [data, setData] = useState<Data>(emptyData);
   const [role, setRole] = useState(() => sessionStorage.getItem('ducky-role') || 'Alumno');
   const [route, setRoute] = useState(() => {
     const r = location.hash.slice(1);
@@ -26,9 +73,11 @@ export default function App() {
 
   // Selección actual y valores de los formularios.
   const [overlay, setOverlay] = useState('');
-  const [selected, setSelected] = useState(DEFAULT_BOOK_ID);
-  const [bookId, setBookId] = useState(DEFAULT_BOOK_ID);
-  const [userId, setUserId] = useState('A01234567');
+  const [selected, setSelected] = useState('');
+  // El libro abierto se recuerda al recargar la página del detalle
+  const [bookId, setBookId] = useState(() => sessionStorage.getItem('ducky-book') || '');
+  const [userId, setUserId] = useState('');
+  const [extra, setExtra] = useState<Record<string, any>>({});
   const [fields, setFields] = useState<Record<string, string>>({});
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState('');
@@ -40,17 +89,19 @@ export default function App() {
   const menuAnchor = useRef<HTMLElement | null>(null);
   const menuElement = useRef<HTMLDivElement | null>(null);
   const [toast, setToast] = useState('');
-  const [explorer, setExplorer] = useState(false);
   const [chat, setChat] = useState<{ who: string; text: string }[]>([]);
   const [revision, setRevision] = useState(0);
+  const [session, setSession] = useState<Session | null>(null);
+  const [password, setPassword] = useState({ actual: '', nueva: '', confirmacion: '' });
   const root = useRef<HTMLDivElement>(null);
   const modal = useRef<HTMLDivElement>(null);
   const lastFocus = useRef<HTMLElement>(null);
+  const pressedOutside = useRef(false);
   const timer = useRef<ReturnType<typeof setTimeout>>(null);
-  const book = data.books.find((b) => b.id === bookId) || data.books[0];
+  const book = data.books.find((b) => b.id === bookId) || data.books[0] || EMPTY_BOOK;
   useEffect(() => {
-    saveData(data);
-  }, [data]);
+    if (bookId) sessionStorage.setItem('ducky-book', bookId);
+  }, [bookId]);
   useEffect(() => {
     const onHash = () => {
       const r = location.hash.slice(1);
@@ -74,12 +125,52 @@ export default function App() {
     },
     [],
   );
+  useEffect(() => {
+    currentSession()
+      .then(({ usuario }) => {
+        startSession(usuario);
+        // Con la sesión abierta, el inicio de sesión lleva a la pantalla principal del rol
+        if (['', '27-759'].includes(location.hash.slice(1))) go(defaultRoutes[usuario.rol]);
+      })
+      .catch(() => {
+        sessionStorage.removeItem('ducky-role');
+        if (location.hash.slice(1) !== '27-759') go('27-759');
+      });
+  }, []);
 
   // Operaciones compartidas por las acciones de las pantallas.
   function notify(text: string) {
     setToast(text);
     if (timer.current) clearTimeout(timer.current);
     timer.current = setTimeout(() => setToast(''), 5000);
+  }
+  // Datos del Sprint 1 desde la API; préstamos y multas siguen con la demostración local.
+  async function refresh(permisos = session?.permisos || []) {
+    try {
+      const remote = await loadRemoteData(permisos);
+      setData((prev) => ({ ...prev, ...remote }));
+    } catch (error) {
+      notify((error as Error).message);
+    }
+  }
+  // Ejecuta una operación de la API, muestra su mensaje, cierra o cambia de ventana y vuelve a
+  // cargar los datos. Si falla también recarga, por si la BD alcanzó a guardar una parte.
+  async function remote(operation: () => Promise<any>, after?: () => void) {
+    try {
+      const result = await operation();
+      notify(result?.mensaje || 'Operación registrada');
+      after?.();
+    } catch (error) {
+      notify((error as Error).message);
+    }
+    await refresh();
+  }
+  function startSession(usuario: Session) {
+    setSession(usuario);
+    setRole(usuario.rol);
+    setUserId(usuario.identificador);
+    sessionStorage.setItem('ducky-role', usuario.rol);
+    void refresh(usuario.permisos);
   }
   function go(id: string) {
     id = routeForRole(id, sessionStorage.getItem('ducky-role') || role);
@@ -93,28 +184,29 @@ export default function App() {
     setMenu([]);
     window.scrollTo({ top: 0, behavior: 'instant' });
   }
-  function open(id: string, record?: string) {
+  function open(id: string, record?: string, details: Record<string, any> = {}) {
     lastFocus.current = document.activeElement as HTMLElement;
     if (record) setSelected(record);
     setOverlay(id);
     setFields({});
+    setQuery('');
+    setPage(1);
     setMenu([]);
+    setExtra(details);
     setRevision((v) => v + 1);
+  }
+  // Abre una ventana con datos que pide a la API en ese momento.
+  function openWith(id: string, record: string | undefined, load: () => Promise<object>) {
+    open(id, record);
+    load()
+      .then((details) => setExtra(details))
+      .catch((error) => notify(error.message));
   }
   function close() {
     setOverlay('');
     setFields({});
     setMenu([]);
     setTimeout(() => lastFocus.current?.focus(), 0);
-  }
-  function update(actionName: string, detail: string, change: (d: Data) => void) {
-    setData((prev) => {
-      const d = structuredClone(prev);
-      change(d);
-      d.history.push({ at: new Date().toISOString(), action: actionName, detail });
-      return d;
-    });
-    notify(actionName);
   }
   const field = (label: string, value: string) => {
     const isSearch =
@@ -161,9 +253,14 @@ export default function App() {
     const current = record || selected;
     const userRoles = roles.slice(0, 3);
     const isStaff = ['Bibliotecario', 'Administrador'].includes(role);
+    const selectedCopy = book.copyList?.find((c) => c.clave === current);
 
     // Sesión y navegación por rol.
     if (actionName === 'cerrar sesion' || actionName === 'volver al inicio de sesion') {
+      void logout().catch(() => undefined);
+      setSession(null);
+      // Los datos de la cuenta anterior no deben quedar a la vista de la siguiente
+      setData(emptyData());
       sessionStorage.removeItem('ducky-role');
       go('27-759');
       return;
@@ -171,14 +268,22 @@ export default function App() {
     if (actionName === 'ingresar') {
       const user = input('Usuario');
       const password = input('Contraseña');
-      const chosen = input('Rol') || 'Alumno';
       if (!user || !password) {
-        notify('Escribe tu usuario y contraseña para probar el acceso.');
+        notify('Escribe tu usuario y contraseña.');
         return;
       }
-      setRole(chosen);
-      sessionStorage.setItem('ducky-role', chosen);
-      go(defaultRoutes[chosen]);
+      // El rol sale del perfil de la cuenta, no de la lista del formulario
+      void login(user, password)
+        .then(({ usuario }) => {
+          startSession(usuario);
+          go(defaultRoutes[usuario.rol]);
+        })
+        .catch((error) => {
+          // Cuenta, perfil o vigencia no habilitados: se indica a qué área acudir
+          if (error instanceof ApiError && error.status === 403)
+            open('342-1840', undefined, { mensaje: error.message, area: error.detail?.area });
+          else notify(error.message);
+        });
       return;
     }
     if (actionName.includes('olvidaste')) {
@@ -191,20 +296,25 @@ export default function App() {
         return;
       }
       close();
-      notify('Solicitud simulada: contacta actionName la biblioteca para recuperar el acceso.');
+      notify(
+        'El sistema aún no restablece contraseñas en línea: pide al Administrador de la biblioteca una contraseña temporal.',
+      );
       return;
     }
     if (['cerrar', 'cancelar', 'entendido', 'volver'].includes(actionName)) {
       close();
       return;
     }
+    if (actionName === 'ver en catalogo') {
+      go('6-26');
+      return;
+    }
     if (
       actionName === 'catalogo' ||
       actionName === 'buscar libros' ||
-      actionName === 'ver en catalogo' ||
       actionName === 'volver al catalogo'
     ) {
-      go(role === 'Administrador' ? '207-1228' : role === 'Bibliotecario' ? '272-2449' : '1-336');
+      go(role === 'Bibliotecario' ? '272-2449' : '1-336');
       return;
     }
     if (actionName === 'mi cuenta') {
@@ -236,9 +346,7 @@ export default function App() {
     };
     if (routes[actionName]) {
       if (userRoles.includes(role) && !['renovaciones'].includes(actionName)) {
-        notify(
-          'Esta opción corresponde actionName un rol de gestión. Cambia de rol desde el explorador.',
-        );
+        notify('Esta opción corresponde a un rol de gestión.');
         return;
       }
       go(routes[actionName]);
@@ -274,11 +382,7 @@ export default function App() {
     if (roles.some((r) => normalizeText(r) === actionName)) {
       const chosen = roles.find((r) => normalizeText(r) === actionName)!;
       if (overlay === '283-1681') {
-        update('Rol actualizado', current, (d) => {
-          const u = d.users.find((u) => u.id === current);
-          if (u) u.role = chosen;
-        });
-        close();
+        void remote(() => api.assignRole(current, chosen), close);
       } else {
         notify('Para cambiar de rol, cierra sesión e ingresa con el rol deseado.');
       }
@@ -295,7 +399,7 @@ export default function App() {
       open('2196-2026');
       return;
     }
-    if (actionName === 'mandar actionName imprimir' || actionName === 'imprimir libro') {
+    if (actionName === 'mandar a imprimir' || actionName === 'imprimir libro') {
       open('2196-2044');
       return;
     }
@@ -305,8 +409,15 @@ export default function App() {
       return;
     }
     if (actionName === 'imprimir') {
-      window.print();
-      open('2196-2076');
+      // La API arma la ficha para imprimir y abre el cuadro de impresión del navegador
+      document.querySelector('iframe.print-frame')?.remove();
+      const frame = document.createElement('iframe');
+      frame.className = 'print-frame';
+      frame.title = 'Impresión de la ficha';
+      frame.src = bookPrintUrl(book.code);
+      document.body.append(frame);
+      open('2196-2076', undefined, {});
+      setFields((f) => ({ ...f, Copias: fields.Copias || '1' }));
       return;
     }
     if (actionName.includes('imprimir recibo') || actionName.includes('imprimir etiqueta')) {
@@ -336,185 +447,14 @@ export default function App() {
       setMenu(['Relevancia original', 'Título A–Z', 'Autor A–Z', 'Título Z–A']);
       return;
     }
-    if (
-      [
-        'relevancia original',
-        'titulo actionName–z',
-        'autor actionName–z',
-        'titulo z–actionName',
-      ].includes(actionName)
-    ) {
+    if (['relevancia original', 'titulo a–z', 'autor a–z', 'titulo z–a'].includes(actionName)) {
       setSort(label === 'Relevancia original' ? 'Relevancia' : label);
       setMenu([]);
       return;
     }
     if (actionName === 'siguiente' || actionName === 'anterior') {
-      const max = Math.max(1, Math.ceil(data.books.length / 5));
+      const max = pageCount(pagedList(ctx)?.length ?? 0);
       setPage((p) => Math.max(1, Math.min(max, p + (actionName === 'siguiente' ? 1 : -1))));
-      return;
-    }
-
-    // Préstamos, devoluciones y renovaciones.
-    if (actionName === 'continuar con este usuario') {
-      setUserId(current);
-      go('162-2206');
-      return;
-    }
-    if (actionName === 'seleccionar ejemplar') {
-      setBookId(current);
-      go('174-3080');
-      return;
-    }
-    if (actionName.includes('confirmar y generar recibo')) {
-      if (!isStaff) {
-        notify('Se requiere un rol de gestión.');
-        return;
-      }
-      const u = data.users.find((u) => u.id === userId);
-      if (!u?.active || book.state !== 'Disponible') {
-        notify('Revisa que el usuario esté activo y el libro disponible.');
-        return;
-      }
-      if (data.loans.filter((l) => l.userId === userId && !l.returned).length >= 2) {
-        notify('Este usuario alcanzó el límite de 2 ejemplares.');
-        return;
-      }
-      const id = `PRE-${new Date().getFullYear()}-${Date.now().toString().slice(-6)}`;
-      update('Préstamo registrado', `${id} · ${book.title}`, (d) => {
-        d.loans.push({
-          id,
-          bookId: book.id,
-          userId,
-          start: new Date().toISOString().slice(0, 10),
-          due: addBusinessDays(u.role === 'Maestro' ? 10 : 5),
-          renewals: 0,
-          returned: false,
-        });
-        d.books.find((b) => b.id === book.id)!.state = 'Prestado';
-      });
-      setSelected(id);
-      go('182-571');
-      return;
-    }
-    if (actionName === 'regresar') {
-      go('162-2206');
-      return;
-    }
-    if (actionName === 'registrar otro prestamo') {
-      go('7-1177');
-      return;
-    }
-    if (actionName === 'confirmar devolucion') {
-      update('Devolución registrada', current, (d) => {
-        const l = d.loans.find((l) => l.id === current);
-        if (l) {
-          l.returned = true;
-          d.books.find((b) => b.id === l.bookId)!.state = 'Disponible';
-        }
-      });
-      setFields({});
-      return;
-    }
-    if (actionName === 'solicitar renovacion') {
-      const loan = data.loans.find((l) => l.id === current);
-      if (!loan || loan.renewals >= 2) {
-        notify('Se alcanzó el máximo de 2 renovaciones.');
-        return;
-      }
-      setSelected(current);
-      notify('Solicitud de renovación registrada para validación del bibliotecario.');
-      update('Renovación solicitada', current, () => {});
-      return;
-    }
-    if (actionName === 'consultar') {
-      const folio = input('Folio de préstamo');
-      const l = data.loans.find((l) => l.id === (folio || 'PRE-2025-1654') && !l.returned);
-      if (l) {
-        setSelected(l.id);
-        notify(`Préstamo encontrado: ${l.id}`);
-      } else notify('No se encontró un préstamo activo con ese folio.');
-      return;
-    }
-    if (actionName === 'autorizar renovacion') {
-      const loan = data.loans.find(
-        (l) => l.id === (selected.startsWith('PRE-') ? selected : 'PRE-2025-1654'),
-      );
-      if (!loan || loan.returned || loan.renewals >= 2) {
-        notify('El préstamo no cumple las condiciones para renovar.');
-        return;
-      }
-      update('Renovación autorizada', loan.id, (d) => {
-        const l = d.loans.find((l) => l.id === loan.id)!;
-        l.renewals++;
-        l.due = addBusinessDays(5, new Date(l.due + 'T12:00:00'));
-      });
-      return;
-    }
-
-    // Multas, pagos y reportes.
-    if (actionName === 'registrar pago' && overlay !== '211-962') {
-      open('211-962', current);
-      return;
-    }
-    if (actionName === 'registrar pago') {
-      const fine = data.fines.find((f) => f.id === current);
-      if (fine && Number(input('Monto pagado (MXN)')) < fine.amount) {
-        notify('El monto debe cubrir el adeudo registrado.');
-        return;
-      }
-      if (!input('Folio del comprobante')) {
-        notify('Ingresa el folio del comprobante.');
-        return;
-      }
-      update('Pago registrado', current, (d) => {
-        const f = d.fines.find((f) => f.id === current);
-        if (f) f.paid = true;
-      });
-      close();
-      return;
-    }
-    if (actionName === 'reportar libro perdido') {
-      open('211-1005');
-      return;
-    }
-    if (actionName === 'registrar y notificar') {
-      const usd = Number(input('Precio última compra (USD)') || 68),
-        rate = Number(input('Tipo de cambio (MXN por USD)') || 17.85);
-      update('Reposición registrada', book.title, (d) => {
-        d.books.find((b) => b.id === bookId)!.state = 'No disponible';
-        d.fines.push({
-          id: `F${Date.now()}`,
-          user: 'Mariana López',
-          amount: usd * rate,
-          reason: 'Reposición por libro perdido',
-          paid: false,
-        });
-      });
-      close();
-      notify('Reposición guardada. El aviso queda simulado en el historial.');
-      return;
-    }
-    if (actionName === 'generar lista') {
-      open('211-1194');
-      return;
-    }
-    if (actionName === 'notificar actionName servicios escolares') {
-      update('Aviso preparado', 'Lista de alumnos suspendidos', () => {});
-      notify('Aviso preparado en el historial; no se envió actionName un servicio externo.');
-      return;
-    }
-    if (actionName === 'exportar reporte' || actionName === 'ver reporte completo') {
-      download(
-        'reporte-ducky.csv',
-        'Clave,Título,Autor,Estado,Ejemplares\n' +
-          data.books
-            .map((b) =>
-              [b.code, b.title, b.author, b.state, b.copies]
-                .map((x) => '"' + String(x).replaceAll('"', '""') + '"')
-                .join(','),
-            )
-            .join('\n'),
-      );
       return;
     }
 
@@ -533,37 +473,41 @@ export default function App() {
     }
     if (actionName === 'guardar usuario') {
       const old = data.users.find((u) => u.id === current);
-      const name = input('Nombre completo') || old?.name;
-      const id = input('ID o matrícula') || old?.id;
-      const email = input('Correo institucional') || old?.email;
-      if (!name || !id || !email || !email.includes('@')) {
-        notify('Completa nombre, matrícula y un correo válido.');
+      const name = input('Nombre completo').trim().replace(/\s+/g, ' ');
+      const id = current === 'new' ? input('ID o matrícula').trim().toUpperCase() : current;
+      const email = input('Correo institucional').trim();
+      if (!id || !email) {
+        notify('Completa matrícula o nómina y correo institucional.');
         return;
       }
       if (current === 'new' && data.users.some((u) => u.id === id)) {
         notify('Ya existe un usuario con esa matrícula.');
         return;
       }
-      update('Usuario guardado', name, (d) => {
-        const u = {
-          id,
-          name,
-          email,
-          role: input('Rol asignado') || old?.role || 'Alumno',
-          active: old?.active ?? true,
-        };
-        const index = d.users.findIndex((v) => v.id === current);
-        if (index >= 0) d.users[index] = u;
-        else d.users.push(u);
-      });
-      close();
+      const chosenRole = input('Rol asignado').trim() || old?.role || 'Alumno';
+      // Solo se mandan los datos que cambiaron
+      const changes = {
+        ...(name && name !== old?.name ? { nombre: name } : {}),
+        ...(email !== old?.email ? { correo: email } : {}),
+        ...(chosenRole !== old?.role ? { rol: chosenRole } : {}),
+      };
+      void remote(async () => {
+        if (current !== 'new') return api.updateUser(current, changes);
+        // Si la persona ya está en CIAA o Capital Humano, el alta toma ese nombre; si se escribió
+        // otro, se corrige después
+        const created: any = await api.createUser({
+          identificador: id,
+          nombre: name,
+          correo: email,
+          rol: chosenRole,
+        });
+        if (name && name !== created.usuario?.nombre) await api.updateUser(id, { nombre: name });
+        return created;
+      }, close);
       return;
     }
     if (actionName === 'reactivar') {
-      update('Usuario reactivado', current, (d) => {
-        const u = d.users.find((u) => u.id === current);
-        if (u) u.active = true;
-      });
+      void remote(() => api.reactivateUser(current));
       return;
     }
     if (actionName === 'baja') {
@@ -578,57 +522,120 @@ export default function App() {
       return;
     }
     if (actionName === 'confirmar baja') {
-      if (overlay === '241-3795')
-        update('Usuario dado de baja', current, (d) => {
-          const u = d.users.find((u) => u.id === current);
-          if (u) u.active = false;
-        });
-      else
-        update('Baja registrada', book.title, (d) => {
-          const b = d.books.find((b) => b.id === bookId)!;
-          b.state = 'No disponible';
-          b.copies = overlay === '2114-2308' ? 0 : Math.max(0, b.copies - 1);
-        });
-      close();
+      if (overlay === '241-3795') {
+        const reason = input('Motivo de baja') || 'Baja tramitada desde Gestión de usuarios';
+        void remote(() => api.removeUser(current, reason), close);
+        return;
+      }
+      const baja = {
+        motivo: input('Motivo de baja') || 'Perdido',
+        observaciones: input('Observaciones'),
+      };
+      void remote(async () => {
+        if (overlay === '2114-2308') return api.removeBook(bookId, baja);
+        // Desde Gestión de catálogo se elige un ejemplar disponible o el libro completo
+        if (overlay === '211-1149') {
+          const choice = input(REMOVAL_CHOICE);
+          return choice === WHOLE_BOOK
+            ? api.removeBook(bookId, baja)
+            : api.removeCopy(choice, baja);
+        }
+        if (overlay === '247-3658' && selectedCopy) return api.removeCopy(selectedCopy.clave, baja);
+        const copy = (await activeCopies(bookId)).find((c) => c.estado === 'Disponible');
+        if (!copy) throw new Error('No hay ejemplares disponibles para dar de baja.');
+        return api.removeCopy(copy.clave, baja);
+      }, close);
       return;
     }
 
     // Registro y clasificación de libros.
+    // Edición de la ficha; ubicación, tipo de uso y ejemplares nuevos se aplican a sus ejemplares
+    async function saveBookChanges(record: object) {
+      const result: any = await api.updateBook(bookId, record);
+      const location = input('Ubicación').trim();
+      const use = input('Tipo de uso').trim();
+      const copyChanges = {
+        ...(location && location !== book.location ? { ubicacion: location } : {}),
+        ...(use && use !== book.use ? { tipoUso: use } : {}),
+      };
+      const copies = book.copyList || [];
+      const updatesCopies = Object.keys(copyChanges).length > 0 && copies.length > 0;
+      if (updatesCopies) for (const copy of copies) await api.updateCopy(copy.clave, copyChanges);
+      const added = Number(input('Ejemplares que se reciben') || 0);
+      if (added > 0)
+        await api.addCopies(bookId, {
+          cantidad: added,
+          ubicacion: location || copies[0]?.ubicacion || '',
+          tipoUso: use || copies[0]?.tipoUso || 'Préstamo externo',
+        });
+      const copiesChanged = updatesCopies || added > 0;
+      return copiesChanged ? { mensaje: 'Libro y ejemplares actualizados' } : result;
+    }
     if (actionName === 'guardar borrador' || actionName === 'guardar y generar etiqueta') {
-      const title = input('Título') || (current !== 'new' ? book.title : '');
-      const author = input('Autor') || (current !== 'new' ? book.author : '');
-      const code = input('Clave') || (current !== 'new' ? book.code : '');
-      if (!title || !author || !code) {
-        notify('Completa título, autor y clave.');
+      const isNew = current === 'new';
+      // En la edición, un campo vacío conserva el dato guardado; en una ficha nueva no hay respaldo
+      const value = (label: string, saved = '') => input(label).trim() || (isNew ? '' : saved);
+      const title = value('Título', book.title);
+      const author = value('Autor', book.author);
+      const code = value('Clave', book.code);
+      const publisher = value('Editorial', book.publisher);
+      const topic = value('Tema', book.topic);
+      const location = input('Ubicación').trim();
+      const missing = [
+        ['Título', title],
+        ['Autor', author],
+        ['Editorial', publisher],
+        ['Tema', topic],
+        ['Clave', code],
+        ...(isNew ? [['Ubicación', location]] : []),
+      ]
+        .filter(([, v]) => !v)
+        .map(([label]) => label);
+      if (missing.length) {
+        notify(`Completa los campos obligatorios: ${missing.join(', ')}.`);
         return;
       }
-      const nextId = current === 'new' ? `B${Date.now()}` : bookId;
-      update('Ficha bibliográfica guardada', title, (d) => {
-        const b = {
-          ...book,
-          id: nextId,
-          title,
-          author,
-          code,
-          publisher: input('Editorial') || book.publisher,
-          isbn: input('ISBN') || 'No registrado',
-          description: input('Descripción del libro') || book.description,
-          location: input('Ubicación') || book.location,
-          copies: Number(input('Ejemplares que se reciben') || book.copies),
-          use: input('Tipo de uso') || book.use,
-          state: 'Disponible',
-        };
-        const i = d.books.findIndex((b) => b.id === nextId);
-        if (i >= 0) d.books[i] = b;
-        else d.books.push(b);
-      });
-      setBookId(nextId);
-      if (actionName === 'guardar y generar etiqueta') open('211-1135');
-      else close();
+      if (location && !LOCATION_FORMAT.test(location)) {
+        notify(LOCATION_HINT);
+        return;
+      }
+      const added = Number(input('Ejemplares que se reciben') || 0);
+      if (!isNew && added > 0 && !location && !book.copyList?.some((c) => c.ubicacion)) {
+        notify('Escribe la Ubicación de los ejemplares nuevos.');
+        return;
+      }
+      const nextId = isNew ? code.toUpperCase() : bookId;
+      const record = {
+        titulo: title,
+        autor: author,
+        editorial: publisher,
+        isbn: input('ISBN'),
+        descripcion: input('Descripción del libro'),
+        tema: topic,
+        precioCompra: input('Precio de compra (USD)'),
+      };
+      void remote(
+        () =>
+          isNew
+            ? api.createBook({
+                ...record,
+                clave: code,
+                ubicacion: location,
+                cantidad: added || 1,
+                tipoUso: input('Tipo de uso'),
+              })
+            : saveBookChanges(record),
+        () => {
+          setBookId(nextId);
+          close();
+          // La etiqueta se abre con los ejemplares recién creados ya cargados
+          if (actionName === 'guardar y generar etiqueta')
+            void refresh().then(() => open('211-1135'));
+        },
+      );
       return;
     }
     if (actionName === 'etiqueta') {
-      if (record) setBookId(record);
       open(overlay === '247-3458' ? '247-3645' : '211-1135');
       return;
     }
@@ -641,17 +648,36 @@ export default function App() {
       return;
     }
     if (actionName === 'guardar clasificacion') {
-      update('Clasificación guardada', book.title, (d) => {
-        const b = d.books.find((b) => b.id === bookId)!;
-        b.location = input('Ubicación / estante') || b.location;
-        b.code = input('Clave') || b.code;
-        b.use = input('Tipo de uso') || b.use;
-      });
-      open('247-3458');
+      const use = input('Tipo de uso');
+      const location = input('Ubicación / estante').trim();
+      const topic = input('Tema');
+      if (location && !LOCATION_FORMAT.test(location)) {
+        notify(LOCATION_HINT);
+        return;
+      }
+      const changes = {
+        ...(input('Clave') ? { clasificacion: input('Clave') } : {}),
+        ...(location ? { ubicacion: location } : {}),
+        ...(use ? { tipoUso: use } : {}),
+      };
+      // Se clasifica el ejemplar elegido en la tabla; si no se eligió, el primero activo
+      const copy = selectedCopy || book.copyList?.[0];
+      if (!copy) {
+        notify('El libro no tiene ejemplares activos para clasificar.');
+        return;
+      }
+      void remote(
+        async () => {
+          // El tema es de la ficha: se guarda en el libro, no en el ejemplar
+          if (topic && topic !== book.topic) await api.updateBook(bookId, { tema: topic });
+          return api.updateCopy(copy.clave, changes);
+        },
+        () => open('247-3458', copy.clave),
+      );
       return;
     }
     if (actionName === 'historial') {
-      open('247-3679');
+      openWith('247-3679', current, async () => ({ movimientos: await bookHistory(bookId) }));
       return;
     }
 
@@ -679,10 +705,7 @@ export default function App() {
       return;
     }
     if (actionName === 'consultar autorizacion') {
-      update('Autorización de Tesorería simulada', current, (d) => {
-        const r = d.requests.find((r) => r.id === current);
-        if (r) r.state = 'Autorizado';
-      });
+      void remote(() => api.resolvePurchase(current, 'Autorizar'));
       return;
     }
     if (actionName === 'confirmar revision') {
@@ -702,11 +725,7 @@ export default function App() {
         notify((error as Error).message);
         return;
       }
-      update('Solicitud enviada a Tesorería', current, (d) => {
-        const r = d.requests.find((r) => r.id === current)!;
-        r.state = 'En Tesorería';
-        r.sentAt = new Date().toISOString();
-      });
+      void remote(() => api.sendPurchase(current));
       return;
     }
     if (actionName === 'registrar recepcion') {
@@ -722,39 +741,47 @@ export default function App() {
         notify('Registra la recepción del lote antes de entregarlo.');
         return;
       }
-      update('Entrega al catálogo registrada', current, (d) => {
-        d.requests.find((r) => r.id === current)!.state = 'Entregado al catálogo';
-      });
-      close();
+      void remote(() => api.deliverPurchase(current), close);
       return;
     }
     if (actionName === 'enviados al catalogo' || actionName === 'recibidos de compras') {
       open('2189-2119');
       return;
     }
-    if (actionName === 'historial de adquisiciones' || actionName === 'ver historial') {
+    if (actionName === 'ver historial') {
       open('2081-2208', current);
       return;
     }
+    if (actionName === 'historial de adquisiciones') {
+      // Lista completa: no debe quedar elegida la última solicitud consultada
+      setSelected('');
+      open('2081-2208');
+      return;
+    }
     if (actionName === 'actualizar lista de solicitudes') {
-      notify('Lista actualizada con los datos guardados en este navegador.');
+      void refresh().then(() => notify('Lista actualizada'));
       setRevision((v) => v + 1);
       return;
     }
     if (actionName === 'autorizar' || actionName === 'rechazar') {
-      update(
-        actionName === 'autorizar' ? 'Petición autorizada' : 'Solicitud rechazada',
-        current,
-        (d) => {
-          const r = d.requests.find((r) => r.id === current);
-          if (r) r.state = actionName === 'autorizar' ? 'Autorizado' : 'Rechazado';
-        },
-      );
-      close();
+      const decision = actionName === 'autorizar' ? 'Autorizar' : 'Rechazar';
+      void remote(() => api.resolvePurchase(current, decision), close);
       return;
     }
     if (actionName === 'confirmar desactivacion') {
-      open('373-1912');
+      const profile = extra.perfil;
+      api
+        .deactivateProfile(profile.key)
+        .then((result: any) => {
+          notify(result?.mensaje || 'Perfil desactivado');
+          close();
+          return refresh();
+        })
+        .catch((error) => {
+          if (error instanceof ApiError && error.detail?.cuentas)
+            open('373-1912', undefined, { perfil: profile, cuentas: error.detail.cuentas });
+          else notify(error.message);
+        });
       return;
     }
 
@@ -889,6 +916,8 @@ export default function App() {
     data,
     role,
     userId,
+    userName: session?.nombre,
+    session,
     route,
     overlay,
     book,
@@ -898,12 +927,14 @@ export default function App() {
     sort,
     page,
     fields,
+    extra,
     action,
     field,
   };
   const Screen = screens[route] || screens['27-759'];
-  const Overlay = screens[overlay];
+  const Overlay = LATER_SPRINTS[overlay] ? () => <LaterSprint id={overlay} /> : screens[overlay];
   const selectedRequest = data.requests.find((r) => r.id === selected);
+  const availableCopies = (book.copyList || []).filter((c) => c.estado === 'Disponible');
   return (
     <DesignContext.Provider value={ctx}>
       <div ref={root} onClick={delegate} onKeyDown={delegate}>
@@ -942,7 +973,53 @@ export default function App() {
                 </button>
               </form>
             )}
-            <Screen />
+            {LATER_SPRINTS[route] ? <LaterSprint id={route} /> : <Screen />}
+            {route === '371-1836' && (
+              <section className="purchase-dialog" aria-label="Perfiles registrados">
+                <h3>Perfiles registrados</h3>
+                <div className="live-table-wrap">
+                  <table className="live-table">
+                    <thead>
+                      <tr>
+                        {[
+                          'Clave',
+                          'Nombre',
+                          'Rol',
+                          'Permisos',
+                          'Cuentas activas',
+                          'Estado',
+                          'Acciones',
+                        ].map((h) => (
+                          <th key={h}>{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(data.profiles || []).map((p) => (
+                        <tr key={p.key}>
+                          <td>{p.key}</td>
+                          <td>{p.name}</td>
+                          <td>{p.role}</td>
+                          <td title={p.permissions.join(', ')}>{p.permissions.length}</td>
+                          <td>{p.activeAccounts}</td>
+                          <td>{p.active ? 'Activo' : 'Inactivo'}</td>
+                          <td>
+                            {p.active && (
+                              <button
+                                className="action"
+                                onClick={() => open('373-1903', undefined, { perfil: p })}
+                              >
+                                Desactivar
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+            )}
           </Suspense>
         </div>
         {menu.length > 0 && (
@@ -963,8 +1040,14 @@ export default function App() {
         {Overlay && (
           <div
             className="modal-shade"
+            // Solo cierra si el clic empezó y terminó fuera de la ventana: al seleccionar el
+            // texto de un campo y soltar el ratón fuera, no se pierde lo capturado
+            onMouseDown={(e) => {
+              pressedOutside.current = e.target === e.currentTarget;
+            }}
             onClick={(e) => {
-              if (e.target === e.currentTarget) close();
+              if (e.target === e.currentTarget && pressedOutside.current) close();
+              pressedOutside.current = false;
             }}
           >
             <div
@@ -985,18 +1068,42 @@ export default function App() {
                     mode={overlay}
                     request={selectedRequest}
                     data={data}
-                    canEdit={
-                      role === 'Comprador de libros' &&
-                      sessionStorage.getItem('ducky-role') === role
-                    }
+                    onRequest={(id) => setSelected(id)}
+                    canEdit={Boolean(
+                      session?.permisos.includes(
+                        overlay === '211-1260' ? 'REGISTRAR_RECEPCIONES' : 'GESTIONAR_SOLICITUDES',
+                      ),
+                    )}
                     close={close}
-                    commit={(purchase, event) =>
-                      update(`${event} · ${purchase.id}`, purchase.id, (d) => {
-                        const index = d.requests.findIndex((r) => r.id === purchase.id);
-                        if (index < 0) d.requests.push(purchase);
-                        else d.requests[index] = purchase;
-                      })
-                    }
+                    commit={(purchase) => {
+                      if (!data.requests.some((r) => r.id === purchase.id)) {
+                        void remote(() =>
+                          api.createPurchase({
+                            solicitante: purchase.requester,
+                            costoEstimado: purchase.cost,
+                            enviar: true,
+                            partidas: (purchase.lines || []).map((l) => ({
+                              titulo: l.title,
+                              autor: l.author,
+                              editorial: l.publisher,
+                              isbn: l.isbn,
+                              cantidad: l.quantity,
+                            })),
+                          }),
+                        );
+                        return;
+                      }
+                      const receipt = purchase.receipts?.at(-1);
+                      if (receipt)
+                        void remote(() =>
+                          api.receivePurchase(purchase.id, {
+                            fechaRecepcion: receipt.date,
+                            cantidades: Object.fromEntries(
+                              receipt.lines.map((l) => [l.id, l.quantity]),
+                            ),
+                          }),
+                        );
+                    }}
                   />
                 ) : (
                   <Overlay />
@@ -1017,20 +1124,46 @@ export default function App() {
                     selectedRequest.state,
                   ) && <Action primary>Registrar recepción</Action>}
                   {selectedRequest.state === 'Recibido' && (
-                    <button className="action primary" onClick={() => open('2081-2189')}>
+                    <button
+                      className="action primary"
+                      onClick={() =>
+                        openWith('2081-2189', selectedRequest.id, () =>
+                          purchaseDetail(selectedRequest.id),
+                        )
+                      }
+                    >
                       Entregar al catálogo
                     </button>
                   )}
                 </div>
               )}
-              {overlay === '2189-2119' &&
-                data.requests
-                  .filter((r) => r.state === 'Entregado al catálogo')
-                  .map((r) => (
-                    <p className="modal-extra" key={r.id}>
-                      {r.id} · {r.title} · {r.received} ejemplar(es) entregados
+              {overlay === '211-1149' && (
+                <div className="modal-extra">
+                  <label>
+                    {REMOVAL_CHOICE}
+                    <select
+                      aria-label={REMOVAL_CHOICE}
+                      value={fields[REMOVAL_CHOICE] || availableCopies[0]?.clave || WHOLE_BOOK}
+                      onChange={(e) => field(REMOVAL_CHOICE, e.target.value)}
+                    >
+                      {availableCopies.map((c) => (
+                        <option key={c.clave} value={c.clave}>
+                          Ejemplar {c.clave} · {c.ubicacion || 'Ubicación incompleta'}
+                        </option>
+                      ))}
+                      <option value={WHOLE_BOOK}>
+                        Libro completo ({book.copies} ejemplar{book.copies === 1 ? '' : 'es'})
+                      </option>
+                    </select>
+                  </label>
+                  {!availableCopies.length && (
+                    <p>
+                      No hay ejemplares disponibles: los que están prestados no se pueden dar de
+                      baja hasta su devolución.
                     </p>
-                  ))}
+                  )}
+                </div>
+              )}
               {overlay === '321-2162' && chat.length > 0 && (
                 <div className="chat-messages" aria-live="polite">
                   {chat.map((m, i) => (
@@ -1044,29 +1177,55 @@ export default function App() {
           </div>
         )}
         <div className="prototype-tools">
-          <button onClick={() => setExplorer((v) => !v)}>Explorar prototipo</button>
           {route !== '27-759' && <button onClick={() => open('321-2162')}>Asistente Ducky</button>}
         </div>
-        {explorer && (
-          <PrototypeExplorer
-            role={role}
-            onClose={() => setExplorer(false)}
-            onRoleChange={(chosen) => {
-              if (chosen !== role)
-                notify('Para cambiar de rol, cierra sesión e ingresa con el rol deseado.');
-            }}
-            go={go}
-            open={open}
-            onReset={() => {
-              if (confirm('¿Restablecer los datos de demostración?')) {
-                localStorage.removeItem('ducky-data-v1');
-                setData(loadData());
-                notify('Datos restablecidos');
-              }
-            }}
-          />
-        )}
 
+        {session?.debeCambiarContrasena && route !== '27-759' && (
+          <div className="modal-shade">
+            <form
+              className="modal-window purchase-dialog"
+              style={{ width: 420 }}
+              aria-label="Cambiar contraseña temporal"
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (password.nueva !== password.confirmacion) {
+                  notify('Las contraseñas nuevas no coinciden.');
+                  return;
+                }
+                changePassword(password.actual, password.nueva)
+                  .then((result: any) => {
+                    setSession(result.usuario);
+                    setPassword({ actual: '', nueva: '', confirmacion: '' });
+                    notify(result.mensaje);
+                  })
+                  .catch((error) => notify(error.message));
+              }}
+            >
+              <h3>Cambia tu contraseña temporal</h3>
+              <p>Por seguridad, elige una contraseña nueva antes de continuar.</p>
+              {(
+                [
+                  ['actual', 'Contraseña actual'],
+                  ['nueva', 'Nueva contraseña'],
+                  ['confirmacion', 'Confirmar nueva contraseña'],
+                ] as const
+              ).map(([key, label]) => (
+                <label key={key}>
+                  {label}
+                  <input
+                    type="password"
+                    aria-label={label}
+                    value={password[key]}
+                    onChange={(e) => setPassword((p) => ({ ...p, [key]: e.target.value }))}
+                  />
+                </label>
+              ))}
+              <button className="action primary" type="submit">
+                Guardar contraseña
+              </button>
+            </form>
+          </div>
+        )}
         {toast && (
           <div role="status" className="toast">
             {toast}

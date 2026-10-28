@@ -180,7 +180,9 @@ export default function InicioSesion() {
               </DesignText>
             </DesignInput>
           </div>
+          {/* El rol sale del perfil de la cuenta en la BD, así que no se pide al iniciar sesión */}
           <div
+            style={{ display: 'none' }}
             className="content-stretch flex flex-col gap-[8px] items-start relative shrink-0 w-full"
             data-node-id="27:807"
             data-name="Field"

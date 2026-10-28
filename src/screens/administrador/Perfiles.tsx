@@ -228,7 +228,7 @@ export default function Perfiles() {
               >
                 Consulta los 6 roles del sistema y las acciones autorizadas para cada uno.
               </DesignText>
-              <div
+              <DynamicSlot
                 className="bg-white border border-[#e1e1e1] border-solid content-stretch flex flex-col items-start overflow-clip relative rounded-[12px] shrink-0 w-full"
                 data-node-id="2148:2159"
                 data-name="Tabla · Roles, permisos y autorizaciones"
@@ -523,7 +523,7 @@ export default function Perfiles() {
                     </DesignText>
                   </div>
                 </div>
-              </div>
+              </DynamicSlot>
               <DesignText
                 className="font-['Poppins:Regular'] leading-[18px] relative shrink-0 text-[#4b4b4b] text-[12px] w-[1226px]"
                 data-node-id="2148:2195"

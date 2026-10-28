@@ -1,0 +1,1889 @@
+{
+  "info": {
+    "name": "API SIGB · Biblioteca Ducky · Sprint 1",
+    "description": "Peticiones de ejemplo de cada historia del Sprint 1 con los datos de prueba de `npm run db:reset`. Ejecutar en orden: cada carpeta inicia sesión con el rol que necesita (Postman guarda la cookie de sesión). Contraseña de las cuentas de prueba: Ducky2026. Volver a correr `npm run db:reset` antes de repetir la colección completa.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Fecha local de hoy (AAAA-MM-DD) para las recepciones",
+          "const ahora = new Date();",
+          "const hoy = [ahora.getFullYear(), String(ahora.getMonth() + 1).padStart(2, '0'), String(ahora.getDate()).padStart(2, '0')].join('-');",
+          "pm.collectionVariables.set('hoy', hoy);"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000/api"
+    },
+    {
+      "key": "contrasena",
+      "value": "Ducky2026"
+    },
+    {
+      "key": "folio",
+      "value": ""
+    },
+    {
+      "key": "hoy",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "0. Estado de la API",
+      "item": [
+        {
+          "name": "Información y rutas",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('HTTP 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/",
+              "host": ["{{baseUrl}}"],
+              "path": []
+            }
+          }
+        },
+        {
+          "name": "Salud de la API y la BD",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('HTTP 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/salud",
+              "host": ["{{baseUrl}}"],
+              "path": ["salud"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "1. Sesión (HUGUS01)",
+      "item": [
+        {
+          "name": "Credenciales incorrectas (esc. 2)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('HTTP 401', () => pm.response.to.have.status(401));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identificador\": \"A01999000\",\n  \"contrasena\": \"incorrecta\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Cuenta inactiva (esc. 3)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('HTTP 403', () => pm.response.to.have.status(403));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identificador\": \"A01678234\",\n  \"contrasena\": \"{{contrasena}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Campos vacíos (esc. 4)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('HTTP 400', () => pm.response.to.have.status(400));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identificador\": \"\",\n  \"contrasena\": \"\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Iniciar sesión: Alumna",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('HTTP 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identificador\": \"A01234567\",\n  \"contrasena\": \"{{contrasena}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Sesión actual",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('HTTP 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/sesion",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "sesion"]
+            }
+          }
+        },
+        {
+          "name": "Cerrar sesión",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('HTTP 204', () => pm.response.to.have.status(204));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/logout",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "logout"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Usuarios (HUGUS02-05) · Administradora",
+      "item": [
+        {
+          "name": "Iniciar sesión: Administradora",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('HTTP 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identificador\": \"N000001\",\n  \"contrasena\": \"{{contrasena}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Buscar como el front (matrícula o nombre)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('HTTP 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios?buscar=diaz",
+              "host": ["{{baseUrl}}"],
+              "path": ["usuarios"],
+              "query": [
+                {
+                  "key": "buscar",
+                  "value": "diaz"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Buscar con filtros combinados",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('HTTP 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios?rol=Alumno&estado=Activo",
+              "host": ["{{baseUrl}}"],
+              "path": ["usuarios"],
+              "query": [
+                {
+                  "key": "rol",
+                  "value": "Alumno"
+                },
+                {
+                  "key": "estado",
+                  "value": "Activo"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Detalle de cuenta inactiva",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('HTTP 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/A01678234",
+              "host": ["{{baseUrl}}"],
+              "path": ["usuarios", "A01678234"]
+            }
+          }
+        },
+        {
+          "name": "Alta de usuario (HUGUS02)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('HTTP 201', () => pm.response.to.have.status(201));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios",
+              "host": ["{{baseUrl}}"],
+              "path": ["usuarios"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identificador\": \"A01777111\",\n  \"correo\": \"valeria.gomez@ducky.edu.mx\",\n  \"telefono\": \"8117771110\",\n  \"rol\": \"Alumno\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Alta duplicada (HUGUS02 esc. 2)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('HTTP 409', () => pm.response.to.have.status(409));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios",
+              "host": ["{{baseUrl}}"],
+              "path": ["usuarios"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identificador\": \"A01678234\",\n  \"correo\": \"otro@ducky.edu.mx\",\n  \"rol\": \"Alumno\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Cambio de contacto (HUGUS04)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('HTTP 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/A01999000",
+              "host": ["{{baseUrl}}"],
+              "path": ["usuarios", "A01999000"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"telefono\": \"8110001111\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Asignar perfil (HUPRF01 esc. 4)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('HTTP 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/A01333444/perfil",
+              "host": ["{{baseUrl}}"],
+              "path": ["usuarios", "A01333444", "perfil"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"perfil\": \"PRF-ALU\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Baja rechazada por préstamos (HUGUS03 esc. 2)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('HTTP 409', () => pm.response.to.have.status(409));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/A01234567/baja",
+              "host": ["{{baseUrl}}"],
+              "path": ["usuarios", "A01234567", "baja"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"motivo\": \"Egreso\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Baja rechazada por adeudos (HUGUS03 esc. 3)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('HTTP 409', () => pm.response.to.have.status(409));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/A01555888/baja",
+              "host": ["{{baseUrl}}"],
+              "path": ["usuarios", "A01555888", "baja"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"motivo\": \"Egreso\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Baja lógica (HUGUS03 esc. 1)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('HTTP 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/A01999000/baja",
+              "host": ["{{baseUrl}}"],
+              "path": ["usuarios", "A01999000", "baja"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"motivo\": \"Egreso de la universidad\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Reactivar usuario",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('HTTP 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/A01999000/reactivar",
+              "host": ["{{baseUrl}}"],
+              "path": ["usuarios", "A01999000", "reactivar"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Perfiles (HUPRF01) · Administradora",
+      "item": [
+        {
+          "name": "Listar perfiles",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('HTTP 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/perfiles",
+              "host": ["{{baseUrl}}"],
+              "path": ["perfiles"]
+            }
+          }
+        },
+        {
+          "name": "Detalle de perfil con cuentas",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('HTTP 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/perfiles/PRF-MAE",
+              "host": ["{{baseUrl}}"],
+              "path": ["perfiles", "PRF-MAE"]
+            }
+          }
+        },
+        {
+          "name": "Roles y permisos permitidos",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('HTTP 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/roles",
+              "host": ["{{baseUrl}}"],
+              "path": ["roles"]
+            }
+          }
+        },
+        {
+          "name": "Crear perfil (esc. 1)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('HTTP 201', () => pm.response.to.have.status(201));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/perfiles",
+              "host": ["{{baseUrl}}"],
+              "path": ["perfiles"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"clave\": \"PRF-BIB-SALA\",\n  \"nombre\": \"Bibliotecario de sala\",\n  \"rol\": \"Bibliotecario\",\n  \"permisos\": [\n    \"CONSULTAR_LIBROS\",\n    \"CONSULTAR_UBICACION\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Modificar perfil (esc. 2)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('HTTP 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/perfiles/PRF-BIB-SALA",
+              "host": ["{{baseUrl}}"],
+              "path": ["perfiles", "PRF-BIB-SALA"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"permisos\": [\n    \"CONSULTAR_LIBROS\",\n    \"CONSULTAR_UBICACION\",\n    \"CONSULTAR_LISTADO\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Desactivar con cuentas activas (esc. 3)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('HTTP 409', () => pm.response.to.have.status(409));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/perfiles/PRF-MAE/desactivar",
+              "host": ["{{baseUrl}}"],
+              "path": ["perfiles", "PRF-MAE", "desactivar"]
+            }
+          }
+        },
+        {
+          "name": "Desactivar perfil sin cuentas",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('HTTP 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/perfiles/PRF-BIB-SALA/desactivar",
+              "host": ["{{baseUrl}}"],
+              "path": ["perfiles", "PRF-BIB-SALA", "desactivar"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Libros y ejemplares (HULIB01-03) · Bibliotecario",
+      "item": [
+        {
+          "name": "Iniciar sesión: Bibliotecario",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('HTTP 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identificador\": \"N000104\",\n  \"contrasena\": \"{{contrasena}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Recibidos de compras (solo consulta)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('HTTP 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/solicitudes/entregadas",
+              "host": ["{{baseUrl}}"],
+              "path": ["solicitudes", "entregadas"]
+            }
+          }
+        },
+        {
+          "name": "Listas del catálogo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('HTTP 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/catalogos",
+              "host": ["{{baseUrl}}"],
+              "path": ["catalogos"]
+            }
+          }
+        },
+        {
+          "name": "Alta de libro y ejemplar (HULIB01 esc. 1)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('HTTP 201', () => pm.response.to.have.status(201));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/libros",
+              "host": ["{{baseUrl}}"],
+              "path": ["libros"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"clave\": \"LIT-863-BOR\",\n  \"titulo\": \"Ficciones\",\n  \"autor\": \"Jorge Luis Borges\",\n  \"tema\": \"Literatura\",\n  \"editorial\": \"Debolsillo\",\n  \"isbn\": \"\",\n  \"precioCompra\": \"15.00\",\n  \"ubicacion\": \"Estante LIT · A4\",\n  \"tipoUso\": \"Préstamo externo\",\n  \"cantidad\": 2\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Clave de libro duplicada (HULIB01 esc. 3)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('HTTP 409', () => pm.response.to.have.status(409));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/libros",
+              "host": ["{{baseUrl}}"],
+              "path": ["libros"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"clave\": \"LIT-863-RUL\",\n  \"titulo\": \"Otro\",\n  \"autor\": \"X Y\",\n  \"tema\": \"Literatura\",\n  \"editorial\": \"RM\",\n  \"librero\": \"LIT\",\n  \"fila\": \"A2\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Agregar ejemplar (HULIB01 esc. 2)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('HTTP 201', () => pm.response.to.have.status(201));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/libros/LIT-863-BOR/ejemplares",
+              "host": ["{{baseUrl}}"],
+              "path": ["libros", "LIT-863-BOR", "ejemplares"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"librero\": \"LIT\",\n  \"fila\": \"A5\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Detalle de la ficha con ejemplares",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('HTTP 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/libros/LIT-863-BOR",
+              "host": ["{{baseUrl}}"],
+              "path": ["libros", "LIT-863-BOR"]
+            }
+          }
+        },
+        {
+          "name": "Cambio de datos bibliográficos (HULIB03 esc. 1)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('HTTP 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/libros/LIT-863-BOR",
+              "host": ["{{baseUrl}}"],
+              "path": ["libros", "LIT-863-BOR"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"titulo\": \"Ficciones (edición conmemorativa)\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Clasificación y ubicación (HULIB03 esc. 2)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('HTTP 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ejemplares/LIT-863-BOR-E01",
+              "host": ["{{baseUrl}}"],
+              "path": ["ejemplares", "LIT-863-BOR-E01"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ubicacion\": \"Estante LIT · B1\",\n  \"tipoUso\": \"Consulta interna\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Etiqueta del ejemplar",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('HTTP 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ejemplares/LIT-863-BOR-E01/etiqueta",
+              "host": ["{{baseUrl}}"],
+              "path": ["ejemplares", "LIT-863-BOR-E01", "etiqueta"]
+            }
+          }
+        },
+        {
+          "name": "Baja de ejemplar (HULIB02 esc. 1)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('HTTP 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ejemplares/LIT-863-BOR-E02/baja",
+              "host": ["{{baseUrl}}"],
+              "path": ["ejemplares", "LIT-863-BOR-E02", "baja"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"motivo\": \"Dañado\",\n  \"observaciones\": \"Lomo roto\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Baja con préstamo activo (HULIB02 esc. 2)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('HTTP 409', () => pm.response.to.have.status(409));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ejemplares/COM-005.1-COR-E01/baja",
+              "host": ["{{baseUrl}}"],
+              "path": ["ejemplares", "COM-005.1-COR-E01", "baja"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"motivo\": \"Perdido\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Historial del libro",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('HTTP 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/libros/LIT-863-BOR/historial",
+              "host": ["{{baseUrl}}"],
+              "path": ["libros", "LIT-863-BOR", "historial"]
+            }
+          }
+        },
+        {
+          "name": "Baja del libro completo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('HTTP 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/libros/LIT-863-BOR/baja",
+              "host": ["{{baseUrl}}"],
+              "path": ["libros", "LIT-863-BOR", "baja"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"motivo\": \"Obsoleto\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Consulta, ubicación y listado (HULIB04, HUUBI01, HULIS01) · Alumna",
+      "item": [
+        {
+          "name": "Iniciar sesión: Alumna",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('HTTP 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identificador\": \"A01234567\",\n  \"contrasena\": \"{{contrasena}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Buscar como el front",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('HTTP 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/libros?buscar=soledad&criterio=Todos&orden=T%C3%ADtulo%20A%E2%80%93Z&pagina=1",
+              "host": ["{{baseUrl}}"],
+              "path": ["libros"],
+              "query": [
+                {
+                  "key": "buscar",
+                  "value": "soledad"
+                },
+                {
+                  "key": "criterio",
+                  "value": "Todos"
+                },
+                {
+                  "key": "orden",
+                  "value": "Título A–Z"
+                },
+                {
+                  "key": "pagina",
+                  "value": "1"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Buscar con filtros por campo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('HTTP 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/libros?tema=Literatura&autor=rulfo",
+              "host": ["{{baseUrl}}"],
+              "path": ["libros"],
+              "query": [
+                {
+                  "key": "tema",
+                  "value": "Literatura"
+                },
+                {
+                  "key": "autor",
+                  "value": "rulfo"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Libro sin ejemplares (HULIB04 esc. 3)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('HTTP 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/libros/CIE-530-HEW",
+              "host": ["{{baseUrl}}"],
+              "path": ["libros", "CIE-530-HEW"]
+            }
+          }
+        },
+        {
+          "name": "Ubicación incompleta (HULIB04 esc. 4)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('HTTP 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ejemplares/MAT-515-STE-E05",
+              "host": ["{{baseUrl}}"],
+              "path": ["ejemplares", "MAT-515-STE-E05"]
+            }
+          }
+        },
+        {
+          "name": "Consultar ubicación (HUUBI01)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('HTTP 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ubicaciones?titulo=calculo",
+              "host": ["{{baseUrl}}"],
+              "path": ["ubicaciones"],
+              "query": [
+                {
+                  "key": "titulo",
+                  "value": "calculo"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Listado de libros (HULIS01)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('HTTP 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/listado-libros?tema=Literatura",
+              "host": ["{{baseUrl}}"],
+              "path": ["listado-libros"],
+              "query": [
+                {
+                  "key": "tema",
+                  "value": "Literatura"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Exportar listado a PDF",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('HTTP 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/listado-libros/pdf?tema=Literatura",
+              "host": ["{{baseUrl}}"],
+              "path": ["listado-libros", "pdf"],
+              "query": [
+                {
+                  "key": "tema",
+                  "value": "Literatura"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Vista para imprimir",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('HTTP 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/listado-libros/impresion?tema=Literatura",
+              "host": ["{{baseUrl}}"],
+              "path": ["listado-libros", "impresion"],
+              "query": [
+                {
+                  "key": "tema",
+                  "value": "Literatura"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Compras (HUCOM01) · Comprador",
+      "item": [
+        {
+          "name": "Iniciar sesión: Comprador",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('HTTP 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identificador\": \"N000210\",\n  \"contrasena\": \"{{contrasena}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Listar solicitudes por estado",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('HTTP 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/solicitudes?estado=Recibido%20parcialmente",
+              "host": ["{{baseUrl}}"],
+              "path": ["solicitudes"],
+              "query": [
+                {
+                  "key": "estado",
+                  "value": "Recibido parcialmente"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Consultar por folio (esc. 4)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('HTTP 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/solicitudes/SOL-2402",
+              "host": ["{{baseUrl}}"],
+              "path": ["solicitudes", "SOL-2402"]
+            }
+          }
+        },
+        {
+          "name": "Solicitud sin libros (esc. 2)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('HTTP 400', () => pm.response.to.have.status(400));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/solicitudes",
+              "host": ["{{baseUrl}}"],
+              "path": ["solicitudes"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"solicitante\": \"Ing. Industrial\",\n  \"partidas\": [],\n  \"enviar\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Nueva petición del front",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('folio', pm.response.json().folio);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/solicitudes",
+              "host": ["{{baseUrl}}"],
+              "path": ["solicitudes"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"titulo\": \"Diseño de interfaces\",\n  \"solicitante\": \"Facultad de Diseño\",\n  \"cantidad\": 2,\n  \"costoEstimado\": 800,\n  \"justificacion\": \"Bibliografía del curso\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Preparar partidas",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('HTTP 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/solicitudes/{{folio}}/partidas",
+              "host": ["{{baseUrl}}"],
+              "path": ["solicitudes", "{{folio}}", "partidas"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"partidas\": [\n    {\n      \"titulo\": \"Don’t Make Me Think\",\n      \"autor\": \"Steve Krug\",\n      \"editorial\": \"New Riders\",\n      \"cantidad\": 2\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Enviar a Tesorería (esc. 1)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('HTTP 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/solicitudes/{{folio}}/envio",
+              "host": ["{{baseUrl}}"],
+              "path": ["solicitudes", "{{folio}}", "envio"]
+            }
+          }
+        },
+        {
+          "name": "Autorización de Tesorería (simulada)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('HTTP 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/solicitudes/{{folio}}/autorizacion",
+              "host": ["{{baseUrl}}"],
+              "path": ["solicitudes", "{{folio}}", "autorizacion"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"decision\": \"Autorizar\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Recepción parcial (esc. 7)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('HTTP 201', () => pm.response.to.have.status(201));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/solicitudes/{{folio}}/recepciones",
+              "host": ["{{baseUrl}}"],
+              "path": ["solicitudes", "{{folio}}", "recepciones"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fechaRecepcion\": \"{{hoy}}\",\n  \"partidas\": [\n    {\n      \"numero\": 1,\n      \"cantidad\": 1\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Recepción completa (esc. 6)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('HTTP 201', () => pm.response.to.have.status(201));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/solicitudes/{{folio}}/recepciones",
+              "host": ["{{baseUrl}}"],
+              "path": ["solicitudes", "{{folio}}", "recepciones"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fechaRecepcion\": \"{{hoy}}\",\n  \"partidas\": [\n    {\n      \"numero\": 1,\n      \"cantidad\": 1\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Entrega al catálogo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('HTTP 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/solicitudes/{{folio}}/entrega-catalogo",
+              "host": ["{{baseUrl}}"],
+              "path": ["solicitudes", "{{folio}}", "entrega-catalogo"]
+            }
+          }
+        },
+        {
+          "name": "Folio inexistente (esc. 5)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('HTTP 404', () => pm.response.to.have.status(404));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/solicitudes/SOL-0001",
+              "host": ["{{baseUrl}}"],
+              "path": ["solicitudes", "SOL-0001"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

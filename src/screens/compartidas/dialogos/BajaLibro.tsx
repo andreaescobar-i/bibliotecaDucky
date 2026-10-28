@@ -68,7 +68,7 @@ export default function BajaLibro() {
         >
           Motivo de baja
         </DesignText>
-        <DesignInput
+        <DesignSelect
           className="content-stretch cursor-pointer flex gap-[10px] h-[44px] items-center px-[14px] py-[10px] relative rounded-[8px] shrink-0 w-full"
           data-node-id="211:1153"
           data-name="Input · Interactivo"
@@ -92,7 +92,7 @@ export default function BajaLibro() {
           >
             Perdido
           </DesignText>
-        </DesignInput>
+        </DesignSelect>
       </div>
       <div
         className="content-stretch flex flex-col gap-[12px] items-start overflow-clip relative shrink-0 w-full"

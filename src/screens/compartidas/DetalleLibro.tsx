@@ -591,7 +591,7 @@ export default function DetalleLibro() {
                         Ejemplares
                       </DesignText>
                     </div>
-                    <div
+                    <DynamicSlot
                       className="content-stretch flex items-start relative shrink-0 w-full"
                       data-node-id="6:172"
                       data-name="Table"
@@ -715,7 +715,7 @@ export default function DetalleLibro() {
                           </DesignText>
                         </div>
                       </div>
-                    </div>
+                    </DynamicSlot>
                   </div>
                 </div>
               </div>

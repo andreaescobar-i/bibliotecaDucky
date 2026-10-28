@@ -75,7 +75,7 @@ export default function VisorPdf() {
           Introducción a los algoritmos
         </DesignText>
       </div>
-      <div
+      <DynamicSlot
         className="bg-[#f2f7f7] content-stretch flex flex-col h-[370px] items-center overflow-x-clip overflow-y-auto px-[40px] py-[20px] relative rounded-[10px] shrink-0 w-[704px]"
         data-node-id="2196:2031"
         data-name="Área de lectura PDF"
@@ -134,7 +134,7 @@ export default function VisorPdf() {
             ​
           </DesignText>
         </div>
-      </div>
+      </DynamicSlot>
       <div
         className="[word-break:break-word] content-stretch flex font-['Poppins:Regular'] items-start justify-between leading-[18px] not-italic overflow-clip relative shrink-0 text-[#212933] text-[12px] w-[704px]"
         data-node-id="2196:2041"

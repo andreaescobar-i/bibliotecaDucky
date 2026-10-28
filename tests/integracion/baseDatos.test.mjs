@@ -236,11 +236,15 @@ describe('Integridad de compras (HUCOM01)', () => {
     await assert.rejects(promesa, VIOLA_CHECK);
   });
 
-  // Se lee la secuencia sin llamar nextval(), porque nextval() no se revierte con ROLLBACK
-  test('el siguiente folio de recepción continúa después de los cargados', async () => {
+  // Se lee la secuencia sin llamar nextval(), porque nextval() no se revierte con ROLLBACK.
+  // Otras pruebas registran recepciones, así que se compara contra el folio más alto usado.
+  test('el siguiente folio de recepción continúa después de los ya registrados', async () => {
     const resultado = await DbPool.query(
-      'SELECT last_value::INT AS ultimo, is_called FROM seq_folio_recepcion',
+      `SELECT s.last_value::INT AS ultimo,
+              (SELECT MAX(SUBSTRING(folio FROM 5)::INT) FROM recepcion) AS mayor_usado
+       FROM seq_folio_recepcion s`,
     );
-    assert.deepEqual(resultado.rows[0], { ultimo: 2, is_called: true });
+    const { ultimo, mayor_usado: mayorUsado } = resultado.rows[0];
+    assert.ok(ultimo >= mayorUsado, `La secuencia (${ultimo}) repetiría el folio ${mayorUsado}`);
   });
 });

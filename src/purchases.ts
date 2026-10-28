@@ -16,7 +16,10 @@ export type Purchase = {
   received: number;
   state: string;
   lines?: PurchaseLine[];
+  createdAt?: string;
   sentAt?: string;
+  resolvedAt?: string;
+  deliveredAt?: string;
   receipts?: { id: string; date: string; lines: { id: string; quantity: number }[] }[];
 };
 export function validateLines(lines: PurchaseLine[]) {

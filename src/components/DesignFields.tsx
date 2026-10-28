@@ -30,19 +30,53 @@ export function DesignInput({
     ISBN: 'isbn',
     'Descripción del libro': 'description',
     Ubicación: 'location',
+    Tema: 'topic',
+    'Tipo de uso': 'use',
   };
-  if (isBookForm && bookFields[fieldLabel])
-    initial = state.selected === 'new' ? '' : String(state.book[bookFields[fieldLabel]] || '');
-  if (state.overlay === '211-962' && /Monto pagado/.test(fieldLabel)) {
-    initial = String(state.data.fines.find((f) => f.id === state.selected)?.amount || 120);
+  if (isBookForm) {
+    // Ficha nueva: vacía, con un ejemplar y el tipo de uso más común; edición: datos de la BD
+    const isNew = state.selected === 'new';
+    if (bookFields[fieldLabel])
+      initial = isNew
+        ? fieldLabel === 'Tipo de uso'
+          ? 'Préstamo externo'
+          : ''
+        : String(state.book[bookFields[fieldLabel]] || '');
+    if (fieldLabel === 'Precio de compra (USD)')
+      initial = isNew || state.book.price == null ? '' : String(state.book.price);
+    // En la edición indica cuántos ejemplares nuevos se agregan a la ficha
+    if (fieldLabel === 'Ejemplares que se reciben') initial = isNew ? '1' : '0';
+    if (!isNew && fieldLabel === 'Ubicación' && !state.book.copyList?.some((c) => c.ubicacion))
+      initial = '';
+    if (!isNew && fieldLabel === 'Tipo de uso' && !state.book.copyList?.length) initial = '';
   }
+  // Clasificación del ejemplar elegido en la tabla de ejemplares
+  if (state.overlay === '247-3593') {
+    const copy =
+      state.book.copyList?.find((c) => c.clave === state.selected) || state.book.copyList?.[0];
+    const copyValues: Record<string, string | null | undefined> = {
+      Clave: copy?.clasificacion,
+      'Ubicación / estante': copy?.ubicacion,
+      Tema: state.book.topic,
+      'Tipo de uso': copy?.tipoUso,
+    };
+    if (fieldLabel in copyValues) initial = String(copyValues[fieldLabel] || '');
+  }
+  // Alta y cambio de usuario: en el cambio se precargan los datos de la cuenta
+  const editingUser = state.overlay === '241-3699' && state.selected !== 'new';
   if (state.overlay === '241-3699') {
     const u = state.data.users.find((u) => u.id === state.selected);
     initial =
-      { 'Nombre completo': u?.name, 'ID o matrícula': u?.id, 'Correo institucional': u?.email }[
-        fieldLabel
-      ] ?? '';
+      {
+        'Nombre completo': u?.name,
+        'ID o matrícula': u?.id,
+        'Correo institucional': u?.email,
+      }[fieldLabel] ?? '';
   }
+  // Las claves no se editan: identifican la cuenta o la ficha en la BD
+  const readOnly =
+    (editingUser && fieldLabel === 'ID o matrícula') ||
+    (state.overlay === '211-1034' && state.selected !== 'new' && fieldLabel === 'Clave');
   const numeric = /cantidad|ejemplares|copias|precio|costo|cambio|monto/i.test(fieldLabel);
   if (numeric) initial = initial.replace(/[^0-9.]/g, '');
   const [value, setValue] = useState(initial);
@@ -63,6 +97,8 @@ export function DesignInput({
         min={type === 'number' ? 0 : undefined}
         step={type === 'number' ? 'any' : undefined}
         value={value}
+        readOnly={readOnly}
+        title={readOnly ? 'Este dato identifica el registro y no se puede cambiar' : undefined}
         placeholder={initialValue.startsWith('Ej.') ? initialValue : ''}
         autoComplete={type === 'password' ? 'current-password' : 'off'}
         style={{
@@ -97,41 +133,45 @@ export function DesignSelect({
 }: HTMLAttributes<HTMLDivElement> & { label: string; initialValue: string }) {
   const state = useDesign();
   let text = clean(initialValue).split('Item')[0].trim();
-  const [value, setValue] = useState(text || 'Todos');
+  // Al cambiar un usuario, el rol empieza en el que ya tiene la cuenta
+  if (state.overlay === '241-3699' && label === 'Rol asignado')
+    text = state.data.users.find((u) => u.id === state.selected)?.role || text;
+  // Ficha y clasificación: listas sin "Todos". Ficha nueva sin tema elegido; en la edición y la
+  // clasificación, el tema del libro y el tipo de uso del ejemplar
+  const bookForm = ['211-1034', '247-3593'].includes(state.overlay);
+  const copy =
+    state.book.copyList?.find((c) => c.clave === state.selected) || state.book.copyList?.[0];
+  if (bookForm && label === 'Tema') text = state.selected === 'new' ? '' : state.book.topic || '';
+  if (bookForm && label === 'Tipo de uso' && state.selected !== 'new') text = copy?.tipoUso || text;
+  const [value, setValue] = useState(bookForm ? text : text || 'Todos');
   const name = props['data-name'] || '';
   const key = (label + ' ' + name).toLowerCase();
+  // Temas, tipos de uso y motivos de baja vienen de los catálogos de la BD
+  const catalogs = state.data.catalogs;
   let options = /rol/.test(key)
     ? roles
     : /criterio/.test(key)
       ? ['Todos', 'Título', 'Autor', 'Editorial', 'Clave']
       : /uso/.test(key)
-        ? ['Todos', 'Préstamo externo', 'Consulta interna', 'Reservado']
+        ? [...(bookForm ? [] : ['Todos']), ...(catalogs?.tiposUso || [])]
         : /tema/.test(key)
-          ? ['Todos los temas', 'Literatura', 'Computación', 'Historia', 'Matemáticas', 'Ciencias']
+          ? [bookForm ? '' : 'Todos los temas', ...(catalogs?.temas || [])]
           : /motivo/.test(key)
-            ? ['Perdido', 'Dañado', 'Obsoleto', 'Otro']
-            : /periodo/.test(key)
-              ? ['Octubre 2025', 'Septiembre 2025', 'Agosto 2025']
-              : /programa/.test(key)
-                ? ['Todos los programas', 'Ing. Industrial', 'Arquitectura', 'Lic. Economía']
-                : /estante/.test(key)
-                  ? ['Todos los estantes', 'LIT · A1', 'COM · B2', 'HIS · C1']
-                  : /estado/.test(key)
-                    ? [
-                        'Todos',
-                        'Activo',
-                        'Inactivo',
-                        'Pendiente',
-                        'Registrada',
-                        'Por autorizar',
-                        'En Tesorería',
-                        'Recibido parcialmente',
-                        'Rechazado',
-                        'Autorizado',
-                        'Recibido',
-                        'Entregado al catálogo',
-                      ]
-                    : ['Todos', 'Alumno', 'Maestro', 'Colaborador'];
+            ? catalogs?.motivosBaja || []
+            : /estado/.test(key)
+              ? state.route === '241-3397'
+                ? ['Todos', 'Activo', 'Inactivo']
+                : [
+                    'Todos',
+                    'Por autorizar',
+                    'En Tesorería',
+                    'Autorizado',
+                    'Rechazado',
+                    'Recibido parcialmente',
+                    'Recibido',
+                    'Entregado al catálogo',
+                  ]
+              : ['Todos', 'Alumno', 'Maestro', 'Colaborador'];
   if (text && !options.includes(String(text))) options = [text, ...options];
   const actualLabel = label || (/rol/.test(name) ? 'Rol' : 'Estado');
   return (
@@ -146,7 +186,9 @@ export function DesignSelect({
         }}
       >
         {options.map((o) => (
-          <option key={o}>{o}</option>
+          <option key={o} value={o}>
+            {o || 'Selecciona un tema'}
+          </option>
         ))}
       </select>
     </div>

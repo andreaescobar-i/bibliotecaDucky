@@ -1,6 +1,7 @@
-import { useState } from 'react';
-import { type Data, money } from '../model';
+import { useEffect, useState } from 'react';
+import { type Data, dateText, money } from '../model';
 import { type Purchase, type PurchaseLine, validateLines, receivePurchase } from '../purchases';
+import { purchaseDetail } from '../api';
 const newLine = (): PurchaseLine => ({
   id: crypto.randomUUID(),
   title: '',
@@ -17,10 +18,12 @@ export function PurchaseDialog({
   commit,
   close,
   canEdit,
+  onRequest,
 }: {
   mode: string;
   request?: Purchase;
   data: Data;
+  onRequest: (id: string) => void;
   commit: (p: Purchase, event: string) => void;
   close: () => void;
   canEdit: boolean;
@@ -32,9 +35,15 @@ export function PurchaseDialog({
   const [receipt] = useState(() => `REC-${crypto.randomUUID()}`);
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [error, setError] = useState('');
+  // Recepciones e historial registrados en la BD para la solicitud abierta
+  const [detail, setDetail] = useState<any>(null);
+  useEffect(() => {
+    setDetail(null);
+    if (request) purchaseDetail(request.id).then(setDetail, (e) => setError(e.message));
+  }, [request?.id, request?.state, request?.received]);
   const run = (fn: () => void) => {
     try {
-      if (!canEdit) throw new Error('Se requiere una sesión de Comprador de libros.');
+      if (!canEdit) throw new Error('Tu perfil no tiene permiso para esta operación de compras.');
       fn();
       setError('');
     } catch (e) {
@@ -69,8 +78,10 @@ export function PurchaseDialog({
       </h2>
       {error && <p role="alert">{error}</p>}
       <p>
-        Presupuesto mensual informado (demostración): {money(120000)} · Disponible informado:{' '}
-        {money(78450)}. Tesorería determina la autorización final.
+        {data.budget?.informado
+          ? `Presupuesto de ${data.budget.periodo}: ${money(data.budget.montoAutorizado ?? 0)} · Disponible: ${money(data.budget.disponible ?? 0)}.`
+          : 'Presupuesto mensual no informado por Tesorería.'}{' '}
+        Tesorería determina la autorización final.
       </p>
       {mode === '211-1204' ? (
         <>
@@ -163,13 +174,17 @@ export function PurchaseDialog({
       ) : mode === '2081-2208' && !request ? (
         <div>
           <h3>Historial de adquisiciones</h3>
-          {data.history
-            .filter((h) => /solicitud|recepción|catálogo/i.test(h.action))
-            .map((h, i) => (
-              <p key={i}>
-                {new Date(h.at).toLocaleString('es-MX')} · {h.action} · {h.detail}
+          {[...data.requests]
+            .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)))
+            .map((r) => (
+              <p key={r.id}>
+                <button className="action" onClick={() => onRequest(r.id)}>
+                  {r.id}
+                </button>{' '}
+                {dateText(r.createdAt)} · {r.title} · {r.state}
               </p>
             ))}
+          {!data.requests.length && <p>Aún no hay solicitudes registradas.</p>}
         </div>
       ) : !request ? (
         <p role="alert">No se encontró una solicitud con ese folio.</p>
@@ -187,7 +202,7 @@ export function PurchaseDialog({
           </p>
           {mode === '211-1260' && (
             <>
-              <p>Folio de recepción: {receipt}</p>
+              <p>El folio de recepción lo asigna el sistema al registrarla.</p>
               <label>
                 Fecha de recepción
                 <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
@@ -239,26 +254,31 @@ export function PurchaseDialog({
             </button>
           )}
           <h3>Historial</h3>
-          {request.receipts?.map((r) => (
-            <div key={r.id}>
+          {request.createdAt && <p>{dateText(request.createdAt)} · Solicitud registrada</p>}
+          {request.sentAt && <p>{dateText(request.sentAt)} · Enviada a Tesorería</p>}
+          {request.resolvedAt && <p>{dateText(request.resolvedAt)} · Resolución de Tesorería</p>}
+          {detail?.recepciones?.map((r: any) => (
+            <div key={r.folio}>
               <p>
-                {r.id} · {r.date}
+                {dateText(r.fecha)} · Recepción {r.folio} · {r.cantidad} ejemplar(es) · recibió{' '}
+                {r.recibio}
               </p>
-              {r.lines.map((l) => (
-                <p key={l.id}>
-                  {requestLines.find((item) => item.id === l.id)?.title}: {l.quantity} ejemplares
+              {r.partidas.map((l: any) => (
+                <p key={l.numero}>
+                  {l.titulo}: {l.cantidad} ejemplar(es)
                 </p>
               ))}
             </div>
           ))}
-          {data.history
-            .filter((h) => h.detail.includes(request.id))
-            .map((h, i) => (
-              <p key={i}>
-                {new Date(h.at).toLocaleString('es-MX')} · {h.action}
-              </p>
-            ))}
-          {!request.receipts?.length && <p>Sin recepciones registradas.</p>}
+          {detail?.historial?.map((h: any, i: number) => (
+            <p key={i}>
+              {dateText(h.fecha)} · {h.accion} · {h.operador}
+            </p>
+          ))}
+          {request.deliveredAt && (
+            <p>{dateText(request.deliveredAt)} · Entregada al encargado del catálogo</p>
+          )}
+          {detail && !detail.recepciones?.length && <p>Sin recepciones registradas.</p>}
         </>
       )}
       <button className="action" onClick={close}>
