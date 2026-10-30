@@ -1,3 +1,8 @@
+/*----
+ * Programa: LibroPerdido.tsx
+ * Objetivo: Implementación del módulo LibroPerdido
+ */
+
 import { DesignInput, DesignSelect, DesignText, DynamicSlot } from '../../../design-controls';
 type ButtonsProps = {
   className?: string;

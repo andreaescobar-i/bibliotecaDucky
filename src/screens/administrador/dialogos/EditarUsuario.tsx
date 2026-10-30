@@ -1,3 +1,8 @@
+/*----
+ * Programa: EditarUsuario.tsx
+ * Objetivo: Implementación del módulo EditarUsuario
+ */
+
 import { DesignInput, DesignSelect, DesignText, DynamicSlot } from '../../../design-controls';
 type ButtonsProps = {
   className?: string;
@@ -179,7 +184,7 @@ export default function EditarUsuario() {
         >
           Rol asignado
         </DesignText>
-        <DesignInput
+        <DesignSelect
           className="content-stretch cursor-pointer flex gap-[10px] h-[44px] items-center px-[14px] py-[10px] relative rounded-[8px] shrink-0 w-full"
           data-node-id="241:3712"
           data-name="Input · Interactivo"
@@ -203,7 +208,7 @@ export default function EditarUsuario() {
           >
             Alumno
           </DesignText>
-        </DesignInput>
+        </DesignSelect>
       </div>
       <div
         className="content-stretch cursor-pointer flex gap-[12px] items-center justify-end overflow-clip relative shrink-0 w-full"

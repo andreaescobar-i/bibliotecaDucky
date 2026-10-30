@@ -1,3 +1,8 @@
+/*----
+ * Programa: Reportes.tsx
+ * Objetivo: Implementación del módulo Reportes
+ */
+
 import { DesignInput, DesignSelect, DesignText, DynamicSlot } from '../../design-controls';
 const imgIdentidadBiblioteca = '/assets/e387d.png';
 const imgLucideChevronDown = '/assets/b1c28.svg';

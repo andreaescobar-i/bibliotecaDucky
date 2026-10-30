@@ -1,3 +1,8 @@
+/*----
+ * Programa: ValidarUsuario.tsx
+ * Objetivo: Implementación del módulo ValidarUsuario
+ */
+
 import { DesignInput, DesignSelect, DesignText, DynamicSlot } from '../../design-controls';
 const imgSearch = '/assets/7c10f.svg';
 const imgIdentidadBiblioteca = '/assets/e387d.png';

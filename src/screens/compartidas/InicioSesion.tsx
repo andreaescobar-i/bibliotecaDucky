@@ -1,3 +1,8 @@
+/*----
+ * Programa: InicioSesion.tsx
+ * Objetivo: Implementación del módulo InicioSesion
+ */
+
 import { DesignInput, DesignSelect, DesignText, DynamicSlot } from '../../design-controls';
 const imgEf4Ee736F1424F5FAfd8Ab0Addcbca191 = '/assets/26c9f.png';
 const imgSearch = '/assets/5ef97.svg';
@@ -180,7 +185,9 @@ export default function InicioSesion() {
               </DesignText>
             </DesignInput>
           </div>
+          {/* El rol sale del perfil de la cuenta en la BD, así que no se pide al iniciar sesión */}
           <div
+            style={{ display: 'none' }}
             className="content-stretch flex flex-col gap-[8px] items-start relative shrink-0 w-full"
             data-node-id="27:807"
             data-name="Field"

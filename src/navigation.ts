@@ -1,3 +1,8 @@
+/*----
+ * Programa: navigation.ts
+ * Objetivo: Implementación del módulo navigation
+ */
+
 import { lazy, type ComponentType } from 'react';
 import manifest from './manifest.json';
 
@@ -10,8 +15,8 @@ export const defaultRoutes: Record<string, string> = {
   Alumno: '1-336',
   Maestro: '1-336',
   Colaborador: '1-336',
-  Bibliotecario: '7-1177',
-  Administrador: '207-1430',
+  Bibliotecario: '272-2449',
+  Administrador: '241-3397',
   'Comprador de libros': '207-1669',
 };
 export function routeForRole(id: string, role: string) {
@@ -19,8 +24,11 @@ export function routeForRole(id: string, role: string) {
   const entry = manifest.find((item) => item.module === id && !item.overlay);
   if (!entry) return defaultRoutes[role];
   if (['1-336', '272-2449', '207-1228'].includes(id)) {
+    // El Administrador tiene el catálogo de consulta y la Gestión de catálogo
     return role === 'Administrador'
-      ? '207-1228'
+      ? id === '207-1228'
+        ? id
+        : '1-336'
       : role === 'Bibliotecario'
         ? '272-2449'
         : role === 'Comprador de libros'

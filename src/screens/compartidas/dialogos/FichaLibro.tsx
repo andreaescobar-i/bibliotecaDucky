@@ -1,3 +1,8 @@
+/*----
+ * Programa: FichaLibro.tsx
+ * Objetivo: Implementación del módulo FichaLibro
+ */
+
 import { DesignInput, DesignSelect, DesignText, DynamicSlot } from '../../../design-controls';
 type ButtonsProps = {
   className?: string;
@@ -188,7 +193,7 @@ export default function FichaLibro() {
             >
               Tema
             </DesignText>
-            <DesignInput
+            <DesignSelect
               className="content-stretch cursor-pointer flex gap-[10px] h-[44px] items-center px-[14px] py-[10px] relative rounded-[8px] shrink-0 w-full"
               data-node-id="211:1062"
               data-name="Input · Interactivo"
@@ -212,7 +217,7 @@ export default function FichaLibro() {
               >
                 Literatura
               </DesignText>
-            </DesignInput>
+            </DesignSelect>
           </div>
         </div>
         <div
@@ -341,7 +346,7 @@ export default function FichaLibro() {
             >
               Tipo de uso
             </DesignText>
-            <DesignInput
+            <DesignSelect
               className="content-stretch cursor-pointer flex gap-[10px] h-[44px] items-center px-[14px] py-[10px] relative rounded-[8px] shrink-0 w-full"
               data-node-id="211:1107"
               data-name="Input · Interactivo"
@@ -365,7 +370,7 @@ export default function FichaLibro() {
               >
                 Préstamo externo
               </DesignText>
-            </DesignInput>
+            </DesignSelect>
           </div>
         </div>
         <div
@@ -458,7 +463,7 @@ export default function FichaLibro() {
             data-node-id="2127:2286"
             data-name="Input · Interactivo"
             label="Ubicación"
-            initialValue=""
+            initialValue="Ej. LIT · A1"
           >
             <div
               className="absolute inset-0 rounded-[4px]"

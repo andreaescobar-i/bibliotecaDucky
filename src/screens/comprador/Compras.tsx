@@ -1,4 +1,10 @@
+/*----
+ * Programa: Compras.tsx
+ * Objetivo: Implementación del módulo Compras
+ */
+
 import { DesignInput, DesignSelect, DesignText, DynamicSlot } from '../../design-controls';
+import { BudgetBar } from '../../components/BudgetBar';
 const imgIdentidadBiblioteca = '/assets/e387d.png';
 const imgSearch = '/assets/5ef97.svg';
 const imgLucideChevronDown = '/assets/b1c28.svg';
@@ -291,11 +297,7 @@ export default function Compras() {
                   data-node-id="207:1710"
                   data-name="Container"
                 >
-                  <div
-                    className="bg-[#1f1f1f] h-[12.792px] relative shrink-0 w-[308.896px]"
-                    data-node-id="207:1711"
-                    data-name="Container"
-                  />
+                  <BudgetBar />
                 </div>
                 <div
                   className="col-3 content-stretch flex flex-col h-[18px] items-start justify-self-stretch relative row-1 self-center shrink-0"

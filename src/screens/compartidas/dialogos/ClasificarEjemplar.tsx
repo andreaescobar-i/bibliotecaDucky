@@ -1,3 +1,8 @@
+/*----
+ * Programa: ClasificarEjemplar.tsx
+ * Objetivo: Implementación del módulo ClasificarEjemplar
+ */
+
 import { DesignInput, DesignSelect, DesignText, DynamicSlot } from '../../../design-controls';
 type ButtonsProps = {
   className?: string;
@@ -105,7 +110,7 @@ export default function ClasificarEjemplar() {
         >
           Tema
         </DesignText>
-        <DesignInput
+        <DesignSelect
           className="content-stretch cursor-pointer flex gap-[10px] h-[44px] items-center px-[14px] py-[10px] relative rounded-[8px] shrink-0 w-full"
           data-node-id="247:3606"
           data-name="Input · Interactivo"
@@ -129,7 +134,7 @@ export default function ClasificarEjemplar() {
           >
             Literatura
           </DesignText>
-        </DesignInput>
+        </DesignSelect>
       </div>
       <div
         className="content-stretch flex flex-col gap-[12px] items-start overflow-clip relative shrink-0 w-full"
@@ -179,7 +184,7 @@ export default function ClasificarEjemplar() {
         >
           Tipo de uso
         </DesignText>
-        <DesignInput
+        <DesignSelect
           className="content-stretch cursor-pointer flex gap-[10px] h-[44px] items-center px-[14px] py-[10px] relative rounded-[8px] shrink-0 w-full"
           data-node-id="247:3615"
           data-name="Input · Interactivo"
@@ -203,7 +208,7 @@ export default function ClasificarEjemplar() {
           >
             Préstamo externo
           </DesignText>
-        </DesignInput>
+        </DesignSelect>
       </div>
       <div
         className="content-stretch cursor-pointer flex gap-[12px] items-center justify-end overflow-clip relative shrink-0 w-full"

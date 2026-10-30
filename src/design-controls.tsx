@@ -1,3 +1,8 @@
+/*----
+ * Programa: design-controls.tsx
+ * Objetivo: Implementación del módulo design-controls
+ */
+
 // Punto de entrada compartido por las pantallas importadas de Figma.
 export { DesignContext, useDesign } from './context/DesignContext';
 export type { DesignState } from './context/DesignContext';

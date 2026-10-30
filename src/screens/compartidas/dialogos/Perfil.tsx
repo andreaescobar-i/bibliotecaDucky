@@ -1,3 +1,8 @@
+/*----
+ * Programa: Perfil.tsx
+ * Objetivo: Implementación del módulo Perfil
+ */
+
 import { DesignInput, DesignSelect, DesignText, DynamicSlot } from '../../../design-controls';
 type ButtonsProps = {
   className?: string;

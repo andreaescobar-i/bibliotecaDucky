@@ -1,3 +1,8 @@
+/*----
+ * Programa: SeguimientoCompra.tsx
+ * Objetivo: Implementación del módulo SeguimientoCompra
+ */
+
 import { DesignInput, DesignSelect, DesignText, DynamicSlot } from '../../../design-controls';
 type ButtonsProps = {
   className?: string;

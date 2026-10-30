@@ -1,3 +1,8 @@
+/*----
+ * Programa: EtiquetaEjemplar.tsx
+ * Objetivo: Implementación del módulo EtiquetaEjemplar
+ */
+
 import { DesignInput, DesignSelect, DesignText, DynamicSlot } from '../../../design-controls';
 type ButtonsProps = {
   className?: string;

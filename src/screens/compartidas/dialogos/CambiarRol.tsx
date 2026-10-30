@@ -1,3 +1,8 @@
+/*----
+ * Programa: CambiarRol.tsx
+ * Objetivo: Implementación del módulo CambiarRol
+ */
+
 import { DesignInput, DesignSelect, DesignText, DynamicSlot } from '../../../design-controls';
 export default function CambiarRol() {
   return (

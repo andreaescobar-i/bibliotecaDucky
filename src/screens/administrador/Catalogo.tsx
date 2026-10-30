@@ -1,3 +1,8 @@
+/*----
+ * Programa: Catalogo.tsx
+ * Objetivo: Implementación del módulo Catalogo
+ */
+
 import { DesignInput, DesignSelect, DesignText, DynamicSlot } from '../../design-controls';
 const imgPlus = '/assets/da8fb.svg';
 const imgPlus1 = '/assets/320b3.svg';

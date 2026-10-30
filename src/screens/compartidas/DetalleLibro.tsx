@@ -1,3 +1,8 @@
+/*----
+ * Programa: DetalleLibro.tsx
+ * Objetivo: Implementación del módulo DetalleLibro
+ */
+
 import { DesignInput, DesignSelect, DesignText, DynamicSlot } from '../../design-controls';
 const imgButton = '/assets/e387d.png';
 const imgLeft = '/assets/4e569.svg';
@@ -211,7 +216,7 @@ export default function DetalleLibro() {
               data-name="BookDetail:margin"
             >
               <div
-                className="gap-x-[20px] gap-y-[20px] grid grid-cols-[__272px_759px] grid-rows-[_635.16px] h-[555px] relative shrink-0 w-full"
+                className="gap-x-[20px] gap-y-[20px] grid grid-cols-[__272px_759px] grid-rows-[auto] min-h-[555px] relative shrink-0 w-full"
                 data-node-id="6:94"
                 data-name="BookDetail"
               >
@@ -341,12 +346,12 @@ export default function DetalleLibro() {
                   </div>
                 </div>
                 <div
-                  className="col-2 content-stretch flex flex-col h-[555px] items-start justify-self-start pb-[20px] relative row-1 self-start shrink-0 w-[940px]"
+                  className="col-2 content-stretch flex flex-col min-h-[555px] items-start justify-self-start pb-[20px] relative row-1 self-start shrink-0 w-[940px]"
                   data-node-id="52:638"
                   data-name="Panel:margin"
                 >
                   <div
-                    className="bg-white border border-[#e1e1e1] border-solid content-stretch drop-shadow-[0px_1px_1px_rgba(0,0,0,0.06)] flex flex-col h-[555px] items-start p-[28px] relative rounded-[14px] shrink-0 w-full"
+                    className="bg-white border border-[#e1e1e1] border-solid content-stretch drop-shadow-[0px_1px_1px_rgba(0,0,0,0.06)] flex flex-col min-h-[555px] items-start p-[28px] relative rounded-[14px] shrink-0 w-full"
                     data-node-id="6:107"
                     data-name="Panel"
                   >
@@ -591,7 +596,7 @@ export default function DetalleLibro() {
                         Ejemplares
                       </DesignText>
                     </div>
-                    <div
+                    <DynamicSlot
                       className="content-stretch flex items-start relative shrink-0 w-full"
                       data-node-id="6:172"
                       data-name="Table"
@@ -715,7 +720,7 @@ export default function DetalleLibro() {
                           </DesignText>
                         </div>
                       </div>
-                    </div>
+                    </DynamicSlot>
                   </div>
                 </div>
               </div>

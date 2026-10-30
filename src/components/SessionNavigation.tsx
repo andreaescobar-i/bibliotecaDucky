@@ -1,3 +1,8 @@
+/*----
+ * Programa: SessionNavigation.tsx
+ * Objetivo: Implementación del módulo SessionNavigation
+ */
+
 import { useDesign } from '../context/DesignContext';
 
 export function SessionNavigation({
@@ -5,7 +10,7 @@ export function SessionNavigation({
 }: {
   onMenu: (label: string, anchor: HTMLElement) => void;
 }) {
-  const { role, action, overlay } = useDesign();
+  const { role, action, overlay, userName } = useDesign();
   const items =
     role === 'Administrador'
       ? ['Reportes', 'Usuarios', 'Libros', 'Administración', 'Operaciones']
@@ -14,14 +19,8 @@ export function SessionNavigation({
         : role === 'Comprador de libros'
           ? ['Compras']
           : ['Catálogo', 'Mi cuenta'];
-  const name =
-    role === 'Administrador'
-      ? 'Alfonso Chapa'
-      : role === 'Bibliotecario'
-        ? 'Ernesto Díaz'
-        : role === 'Comprador de libros'
-          ? 'Luisa Palacios'
-          : 'Mariana López';
+  // Nombre de la cuenta en sesión
+  const name = userName || '';
   return (
     <header className="session-header" inert={overlay ? true : undefined}>
       <img src="/assets/e387d.png" alt="Biblioteca Ducky" />
@@ -44,6 +43,7 @@ export function SessionNavigation({
         <span className="session-avatar">
           {name
             .split(' ')
+            .slice(0, 2)
             .map((part) => part[0])
             .join('')}
         </span>

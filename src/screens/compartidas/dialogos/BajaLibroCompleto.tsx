@@ -1,3 +1,8 @@
+/*----
+ * Programa: BajaLibroCompleto.tsx
+ * Objetivo: Implementación del módulo BajaLibroCompleto
+ */
+
 import { DesignInput, DesignSelect, DesignText, DynamicSlot } from '../../../design-controls';
 type ButtonsProps = {
   className?: string;
@@ -74,7 +79,7 @@ export default function BajaLibroCompleto() {
         >
           Motivo de baja
         </DesignText>
-        <DesignInput
+        <DesignSelect
           className="content-stretch cursor-pointer flex gap-[10px] h-[44px] items-center px-[14px] py-[10px] relative rounded-[8px] shrink-0 w-full"
           data-node-id="2114:2313"
           data-name="Input · Interactivo"
@@ -98,7 +103,7 @@ export default function BajaLibroCompleto() {
           >
             Perdido
           </DesignText>
-        </DesignInput>
+        </DesignSelect>
       </div>
       <div
         className="content-stretch flex flex-col gap-[12px] items-start overflow-clip relative shrink-0 w-full"

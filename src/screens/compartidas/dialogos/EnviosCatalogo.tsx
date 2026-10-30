@@ -1,3 +1,8 @@
+/*----
+ * Programa: EnviosCatalogo.tsx
+ * Objetivo: Implementación del módulo EnviosCatalogo
+ */
+
 import { DesignInput, DesignSelect, DesignText, DynamicSlot } from '../../../design-controls';
 type ButtonsProps = {
   className?: string;
@@ -67,7 +72,7 @@ export default function EnviosCatalogo() {
           Registro en catálogo
         </DesignText>
       </div>
-      <div
+      <DynamicSlot
         className="content-stretch flex flex-col h-[380px] items-start overflow-x-clip overflow-y-auto relative shrink-0 w-[864px]"
         data-node-id="2189:2126"
         data-name="Lista de libros entregados"
@@ -79,7 +84,7 @@ export default function EnviosCatalogo() {
           Aún no hay libros entregados al encargado del catálogo. Las entregas confirmadas
           aparecerán aquí.
         </DesignText>
-      </div>
+      </DynamicSlot>
       <Buttons
         buttonText="Cerrar"
         className="border border-[#007566] border-solid content-stretch cursor-pointer flex h-[40px] items-center justify-center px-[10px] py-[5px] relative rounded-[8px] shrink-0"

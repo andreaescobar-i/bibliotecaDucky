@@ -1,3 +1,8 @@
+/*----
+ * Programa: Action.tsx
+ * Objetivo: Implementación del módulo Action
+ */
+
 import type { ReactNode } from 'react';
 import { useDesign } from '../context/DesignContext';
 
