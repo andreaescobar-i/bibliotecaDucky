@@ -1,3 +1,8 @@
+/*----
+ * Programa: PerfilBloqueado.tsx
+ * Objetivo: Implementación del módulo PerfilBloqueado
+ */
+
 import { DesignInput, DesignSelect, DesignText, DynamicSlot } from '../../../design-controls';
 type ButtonsProps = {
   className?: string;

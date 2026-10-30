@@ -1,3 +1,8 @@
+/*----
+ * Programa: purchases.ts
+ * Objetivo: Implementación del módulo purchases
+ */
+
 export type PurchaseLine = {
   id: string;
   title: string;

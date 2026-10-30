@@ -1,3 +1,8 @@
+/*----
+ * Programa: EditarUsuario.tsx
+ * Objetivo: Implementación del módulo EditarUsuario
+ */
+
 import { DesignInput, DesignSelect, DesignText, DynamicSlot } from '../../../design-controls';
 type ButtonsProps = {
   className?: string;

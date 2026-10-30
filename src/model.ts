@@ -1,3 +1,8 @@
+/*----
+ * Programa: model.ts
+ * Objetivo: Implementación del módulo model
+ */
+
 export const roles = [
   'Alumno',
   'Maestro',

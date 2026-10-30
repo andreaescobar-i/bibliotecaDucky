@@ -1,3 +1,8 @@
+/*----
+ * Programa: EnviosCatalogo.tsx
+ * Objetivo: Implementación del módulo EnviosCatalogo
+ */
+
 import { DesignInput, DesignSelect, DesignText, DynamicSlot } from '../../../design-controls';
 type ButtonsProps = {
   className?: string;

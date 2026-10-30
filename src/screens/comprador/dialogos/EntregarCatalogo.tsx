@@ -1,3 +1,8 @@
+/*----
+ * Programa: EntregarCatalogo.tsx
+ * Objetivo: Implementación del módulo EntregarCatalogo
+ */
+
 import { DesignInput, DesignSelect, DesignText, DynamicSlot } from '../../../design-controls';
 type ButtonsProps = {
   className?: string;

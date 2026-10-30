@@ -1,3 +1,8 @@
+/*----
+ * Programa: BajaLibro.tsx
+ * Objetivo: Implementación del módulo BajaLibro
+ */
+
 import { DesignInput, DesignSelect, DesignText, DynamicSlot } from '../../../design-controls';
 type ButtonsProps = {
   className?: string;

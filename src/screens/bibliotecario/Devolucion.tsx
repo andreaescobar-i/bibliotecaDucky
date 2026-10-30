@@ -1,3 +1,8 @@
+/*----
+ * Programa: Devolucion.tsx
+ * Objetivo: Implementación del módulo Devolucion
+ */
+
 import { DesignInput, DesignSelect, DesignText, DynamicSlot } from '../../design-controls';
 const imgIdentidadBiblioteca = '/assets/e387d.png';
 const imgSearch = '/assets/7c10f.svg';

@@ -1,3 +1,8 @@
+/*----
+ * Programa: InicioSesion.tsx
+ * Objetivo: Implementación del módulo InicioSesion
+ */
+
 import { DesignInput, DesignSelect, DesignText, DynamicSlot } from '../../design-controls';
 const imgEf4Ee736F1424F5FAfd8Ab0Addcbca191 = '/assets/26c9f.png';
 const imgSearch = '/assets/5ef97.svg';

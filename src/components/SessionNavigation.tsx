@@ -1,3 +1,8 @@
+/*----
+ * Programa: SessionNavigation.tsx
+ * Objetivo: Implementación del módulo SessionNavigation
+ */
+
 import { useDesign } from '../context/DesignContext';
 
 export function SessionNavigation({

@@ -1,3 +1,8 @@
+/*----
+ * Programa: Prestamo.tsx
+ * Objetivo: Implementación del módulo Prestamo
+ */
+
 import { DesignInput, DesignSelect, DesignText, DynamicSlot } from '../../design-controls';
 const imgIdentidadBiblioteca = '/assets/e387d.png';
 type ButtonsProps = {

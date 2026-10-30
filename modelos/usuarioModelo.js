@@ -290,15 +290,17 @@ async function darDeBajaUsuario(cliente, usuarioId, motivo, operadorId) {
  * Objetivo: Reactivar una cuenta dada de baja. La baja anterior queda en la bitácora.
  * @param {import('pg').PoolClient} cliente - Cliente de la transacción.
  * @param {string} usuarioId - Id de la cuenta.
+ * @param {string|null} [perfilId] - Perfil activo que sustituye a uno inactivo.
  * @returns {Promise<void>}
  */
-async function reactivarUsuario(cliente, usuarioId) {
+async function reactivarUsuario(cliente, usuarioId, perfilId = null) {
   await cliente.query(
     `UPDATE usuario
      SET estado_cuenta = 'ACTIVO', fecha_baja = NULL, motivo_baja = NULL,
-         baja_por_usuario_id = NULL, fecha_modificacion = NOW()
+         baja_por_usuario_id = NULL, perfil_id = COALESCE($2, perfil_id),
+         fecha_modificacion = NOW()
      WHERE usuario_id = $1`,
-    [usuarioId],
+    [usuarioId, perfilId],
   );
 }
 

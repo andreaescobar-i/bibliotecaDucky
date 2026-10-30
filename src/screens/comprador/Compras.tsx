@@ -1,3 +1,8 @@
+/*----
+ * Programa: Compras.tsx
+ * Objetivo: Implementación del módulo Compras
+ */
+
 import { DesignInput, DesignSelect, DesignText, DynamicSlot } from '../../design-controls';
 import { BudgetBar } from '../../components/BudgetBar';
 const imgIdentidadBiblioteca = '/assets/e387d.png';

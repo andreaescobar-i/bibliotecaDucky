@@ -1,3 +1,8 @@
+/*----
+ * Programa: api.ts
+ * Objetivo: Implementación del módulo api
+ */
+
 import type { Book, Copy, Data } from './model';
 import type { Purchase } from './purchases';
 

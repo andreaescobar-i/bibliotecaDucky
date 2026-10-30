@@ -1,3 +1,8 @@
+/*----
+ * Programa: App.tsx
+ * Objetivo: Implementación del módulo App
+ */
+
 import React, { useState, useEffect, useRef, Suspense } from 'react';
 import manifest from './manifest.json';
 import { DesignContext, type DesignState, Action } from './design-controls';

@@ -1,3 +1,8 @@
+/*----
+ * Programa: DesignText.tsx
+ * Objetivo: Implementación del módulo DesignText
+ */
+
 import type { HTMLAttributes } from 'react';
 import { useDesign } from '../context/DesignContext';
 import { dateText, money } from '../model';

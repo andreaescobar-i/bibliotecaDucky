@@ -1,3 +1,8 @@
+/*----
+ * Programa: DesignContext.ts
+ * Objetivo: Implementación del módulo DesignContext
+ */
+
 import { createContext, useContext } from 'react';
 import type { Data, Book } from '../model';
 

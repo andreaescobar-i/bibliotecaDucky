@@ -1,3 +1,8 @@
+/*----
+ * Programa: AccesoBloqueado.tsx
+ * Objetivo: Implementación del módulo AccesoBloqueado
+ */
+
 import { DesignInput, DesignSelect, DesignText, DynamicSlot } from '../../../design-controls';
 type ButtonsProps = {
   className?: string;

@@ -1,3 +1,8 @@
+/*----
+ * Programa: DesignFields.tsx
+ * Objetivo: Implementación del módulo DesignFields
+ */
+
 import { useState, type HTMLAttributes } from 'react';
 import { roles } from '../model';
 import { useDesign } from '../context/DesignContext';

@@ -1,3 +1,8 @@
+/*----
+ * Programa: listas.ts
+ * Objetivo: Implementación del módulo listas
+ */
+
 import type { DesignState } from './context/DesignContext';
 
 // Filtros de las tablas; las tablas y sus contadores usan los mismos para no contradecirse.

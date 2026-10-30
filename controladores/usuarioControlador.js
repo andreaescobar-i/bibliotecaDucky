@@ -768,8 +768,9 @@ async function postBajaUsuario(req, res, next) {
 }
 
 /**
- * Objetivo: Reactivar una cuenta dada de baja (botón "Reactivar" del front). Exige perfil activo
- *   y compatible e identidad vigente; las sesiones anteriores a la baja siguen invalidadas.
+ * Objetivo: Reactivar una cuenta dada de baja (botón "Reactivar" del front). Si su perfil está
+ *   inactivo, asigna el perfil base activo del mismo rol. Exige identidad vigente; las sesiones
+ *   anteriores a la baja siguen invalidadas.
  * @param {Object} req - Petición HTTP.
  * @param {Object} res - Respuesta HTTP.
  * @param {Function} next - Envía el error al middleware de errores.
@@ -778,13 +779,19 @@ async function postBajaUsuario(req, res, next) {
 async function postReactivarUsuario(req, res, next) {
   try {
     const usuarioId = await ejecutarTransaccion(async (cliente) => {
+      await usuarioModelo.bloquearCambiosDeAcceso(cliente);
       const cuenta = await obtenerCuentaDeRuta(req, cliente);
       await usuarioModelo.bloquearUsuario(cliente, cuenta.usuario_id);
       if (cuenta.estado_cuenta === 'ACTIVO') {
         throw new ErrorAplicacion(409, 'La cuenta ya está activa');
       }
+      let perfilNuevo = null;
+      if (!cuenta.perfil_activo) {
+        const clave = await perfilModelo.obtenerClavePerfilBaseDeRol(cuenta.rol_nombre, cliente);
+        perfilNuevo = clave ? await perfilModelo.obtenerPerfilPorClave(clave, cliente) : null;
+      }
       validarPerfilParaIdentidad(
-        {
+        perfilNuevo || {
           activo: cuenta.perfil_activo,
           rol_activo: cuenta.rol_activo,
           rol_nombre: cuenta.rol_nombre,
@@ -799,14 +806,19 @@ async function postReactivarUsuario(req, res, next) {
         throw new ErrorAplicacion(400, MENSAJES_CUENTAS.IDENTIDAD_NO_VIGENTE);
       }
 
-      await usuarioModelo.reactivarUsuario(cliente, cuenta.usuario_id);
+      await usuarioModelo.reactivarUsuario(cliente, cuenta.usuario_id, perfilNuevo?.perfil_id);
       await bitacoraModelo.registrarEvento(
         {
           actorUsuarioId: req.usuario.usuario_id,
           accion: 'REACTIVACION_CUENTA',
           entidad: 'usuario',
           claveRegistro: cuenta.identificador,
-          detalle: { bajaAnterior: { fecha: cuenta.fecha_baja, motivo: cuenta.motivo_baja } },
+          detalle: {
+            bajaAnterior: { fecha: cuenta.fecha_baja, motivo: cuenta.motivo_baja },
+            ...(perfilNuevo
+              ? { perfilAnterior: cuenta.perfil_clave, perfilNuevo: perfilNuevo.clave }
+              : {}),
+          },
           ip: req.ip,
         },
         cliente,

@@ -1,3 +1,8 @@
+/*----
+ * Programa: RegistrarPago.tsx
+ * Objetivo: Implementación del módulo RegistrarPago
+ */
+
 import { DesignInput, DesignSelect, DesignText, DynamicSlot } from '../../../design-controls';
 type ButtonsProps = {
   className?: string;

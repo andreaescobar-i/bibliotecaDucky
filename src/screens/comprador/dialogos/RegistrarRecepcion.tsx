@@ -1,3 +1,8 @@
+/*----
+ * Programa: RegistrarRecepcion.tsx
+ * Objetivo: Implementación del módulo RegistrarRecepcion
+ */
+
 import { DesignInput, DesignSelect, DesignText, DynamicSlot } from '../../../design-controls';
 type ButtonsProps = {
   className?: string;

@@ -1,3 +1,8 @@
+/*----
+ * Programa: Cuenta.tsx
+ * Objetivo: Implementación del módulo Cuenta
+ */
+
 import { DesignInput, DesignSelect, DesignText, DynamicSlot } from '../../design-controls';
 const imgButton = '/assets/e387d.png';
 type ButtonsProps = {

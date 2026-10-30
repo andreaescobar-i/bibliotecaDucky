@@ -1,3 +1,8 @@
+/*----
+ * Programa: navigation.ts
+ * Objetivo: Implementación del módulo navigation
+ */
+
 import { lazy, type ComponentType } from 'react';
 import manifest from './manifest.json';
 

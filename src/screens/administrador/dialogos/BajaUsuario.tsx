@@ -1,3 +1,8 @@
+/*----
+ * Programa: BajaUsuario.tsx
+ * Objetivo: Implementación del módulo BajaUsuario
+ */
+
 import { DesignInput, DesignSelect, DesignText, DynamicSlot } from '../../../design-controls';
 type ButtonsProps = {
   className?: string;

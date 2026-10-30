@@ -1,3 +1,8 @@
+/*----
+ * Programa: FichaLibro.tsx
+ * Objetivo: Implementación del módulo FichaLibro
+ */
+
 import { DesignInput, DesignSelect, DesignText, DynamicSlot } from '../../../design-controls';
 type ButtonsProps = {
   className?: string;

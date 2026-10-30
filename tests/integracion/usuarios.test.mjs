@@ -537,4 +537,32 @@ describe('HUGUS03: baja lógica de usuarios', () => {
     assert.equal(reactivacion.body.usuario.estadoCuenta, 'Activo');
     await iniciarSesion('A01999000');
   });
+
+  test('reactiva una cuenta con perfil inactivo usando el perfil activo del mismo rol', async () => {
+    await DbPool.query(
+      `UPDATE usuario SET estado_cuenta = 'INACTIVO', fecha_baja = NOW(),
+         motivo_baja = 'Prueba de reactivación' WHERE identificador = 'A01333444'`,
+    );
+    try {
+      const respuesta = await administradora.post('/api/usuarios/A01333444/reactivar');
+      assert.equal(respuesta.status, 200);
+      assert.equal(respuesta.body.usuario.estadoCuenta, 'Activo');
+      assert.equal(respuesta.body.usuario.perfil.clave, 'PRF-ALU');
+      await iniciarSesion('A01333444');
+
+      const perfilAnterior = await DbPool.query(
+        `SELECT activo FROM perfil WHERE clave = 'PRF-ALU-2020'`,
+      );
+      assert.equal(perfilAnterior.rows[0].activo, false);
+      const evento = await obtenerUltimoEvento('REACTIVACION_CUENTA', 'A01333444');
+      assert.equal(evento.detalle.perfilAnterior, 'PRF-ALU-2020');
+      assert.equal(evento.detalle.perfilNuevo, 'PRF-ALU');
+    } finally {
+      await asignarPerfilDirecto('A01333444', 'PRF-ALU-2020');
+      await DbPool.query(
+        `UPDATE usuario SET estado_cuenta = 'ACTIVO', fecha_baja = NULL, motivo_baja = NULL
+         WHERE identificador = 'A01333444'`,
+      );
+    }
+  });
 });

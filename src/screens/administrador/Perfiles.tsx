@@ -1,3 +1,8 @@
+/*----
+ * Programa: Perfiles.tsx
+ * Objetivo: Implementación del módulo Perfiles
+ */
+
 import { DesignInput, DesignSelect, DesignText, DynamicSlot } from '../../design-controls';
 const imgIdentidadBiblioteca = '/assets/e387d.png';
 type ButtonsProps = {

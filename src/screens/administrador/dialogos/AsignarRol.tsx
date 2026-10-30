@@ -1,3 +1,8 @@
+/*----
+ * Programa: AsignarRol.tsx
+ * Objetivo: Implementación del módulo AsignarRol
+ */
+
 import { DesignInput, DesignSelect, DesignText, DynamicSlot } from '../../../design-controls';
 export default function AsignarRol() {
   return (

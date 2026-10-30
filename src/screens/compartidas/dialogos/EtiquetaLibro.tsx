@@ -1,3 +1,8 @@
+/*----
+ * Programa: EtiquetaLibro.tsx
+ * Objetivo: Implementación del módulo EtiquetaLibro
+ */
+
 import { DesignInput, DesignSelect, DesignText, DynamicSlot } from '../../../design-controls';
 type ButtonsProps = {
   className?: string;

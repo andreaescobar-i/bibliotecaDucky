@@ -1,3 +1,8 @@
+/*----
+ * Programa: PurchaseDialog.tsx
+ * Objetivo: Implementación del módulo PurchaseDialog
+ */
+
 import { useEffect, useState } from 'react';
 import { type Data, dateText, money } from '../model';
 import { type Purchase, type PurchaseLine, validateLines, receivePurchase } from '../purchases';

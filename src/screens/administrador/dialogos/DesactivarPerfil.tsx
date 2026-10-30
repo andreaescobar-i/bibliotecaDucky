@@ -1,3 +1,8 @@
+/*----
+ * Programa: DesactivarPerfil.tsx
+ * Objetivo: Implementación del módulo DesactivarPerfil
+ */
+
 import { DesignInput, DesignSelect, DesignText, DynamicSlot } from '../../../design-controls';
 type ButtonsProps = {
   className?: string;

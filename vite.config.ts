@@ -1,3 +1,8 @@
+/*----
+ * Programa: vite.config.ts
+ * Objetivo: Implementación del módulo vite.config
+ */
+
 import { defineConfig, loadEnv } from 'vite';
 
 // El front llama a /api y Vite lo reenvía a la API; así la cookie de sesión es del mismo origen.

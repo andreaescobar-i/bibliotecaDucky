@@ -1,3 +1,8 @@
+/*----
+ * Programa: purchases.test.mjs
+ * Objetivo: Implementación del módulo purchases.test
+ */
+
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { validateLines, receivePurchase, findPurchase } from '../src/purchases.ts';

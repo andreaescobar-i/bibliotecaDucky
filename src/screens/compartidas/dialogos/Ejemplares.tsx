@@ -1,3 +1,8 @@
+/*----
+ * Programa: Ejemplares.tsx
+ * Objetivo: Implementación del módulo Ejemplares
+ */
+
 import { DesignInput, DesignSelect, DesignText, DynamicSlot } from '../../../design-controls';
 type ButtonsProps = {
   className?: string;

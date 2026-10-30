@@ -1,3 +1,8 @@
+/*----
+ * Programa: DynamicSlot.tsx
+ * Objetivo: Implementación del módulo DynamicSlot
+ */
+
 import type { HTMLAttributes, ReactNode } from 'react';
 import { dateText } from '../model';
 import { useDesign } from '../context/DesignContext';

@@ -1,3 +1,8 @@
+/*----
+ * Programa: Asistente.tsx
+ * Objetivo: Implementación del módulo Asistente
+ */
+
 import { DesignInput, DesignSelect, DesignText, DynamicSlot } from '../../../design-controls';
 type ButtonsProps = {
   className?: string;

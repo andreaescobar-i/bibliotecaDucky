@@ -1,3 +1,8 @@
+/*----
+ * Programa: RevisarPeticion.tsx
+ * Objetivo: Implementación del módulo RevisarPeticion
+ */
+
 import { DesignInput, DesignSelect, DesignText, DynamicSlot } from '../../../design-controls';
 type ButtonsProps = {
   className?: string;

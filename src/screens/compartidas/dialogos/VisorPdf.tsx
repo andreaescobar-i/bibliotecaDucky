@@ -1,3 +1,8 @@
+/*----
+ * Programa: VisorPdf.tsx
+ * Objetivo: Implementación del módulo VisorPdf
+ */
+
 import { DesignInput, DesignSelect, DesignText, DynamicSlot } from '../../../design-controls';
 type ButtonsProps = {
   className?: string;

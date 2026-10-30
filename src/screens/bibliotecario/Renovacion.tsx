@@ -1,3 +1,8 @@
+/*----
+ * Programa: Renovacion.tsx
+ * Objetivo: Implementación del módulo Renovacion
+ */
+
 import { DesignInput, DesignSelect, DesignText, DynamicSlot } from '../../design-controls';
 const imgIdentidadBiblioteca = '/assets/e387d.png';
 const imgSearch = '/assets/5ef97.svg';

@@ -1,3 +1,8 @@
+/*----
+ * Programa: BudgetBar.tsx
+ * Objetivo: Implementación del módulo BudgetBar
+ */
+
 import { useDesign } from '../context/DesignContext';
 
 // Barra del presupuesto disponible del mes, con el porcentaje que informa la API.

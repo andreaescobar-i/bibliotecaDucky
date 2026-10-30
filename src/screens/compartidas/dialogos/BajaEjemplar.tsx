@@ -1,3 +1,8 @@
+/*----
+ * Programa: BajaEjemplar.tsx
+ * Objetivo: Implementación del módulo BajaEjemplar
+ */
+
 import { DesignInput, DesignSelect, DesignText, DynamicSlot } from '../../../design-controls';
 type ButtonsProps = {
   className?: string;
