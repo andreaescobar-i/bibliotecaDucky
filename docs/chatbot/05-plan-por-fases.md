@@ -26,10 +26,17 @@ publicar.
 | ---- | ------------------------------- | ----------------------------------------------------------- |
 | 1    | Terminada, 15 de noviembre 2026 | 79 pruebas sin base y 206 con base; app encendida y probada |
 | 2    | Terminada, 15 de noviembre 2026 | 88 pruebas sin base y 230 con base; rama `chatbot`          |
-| 3    | Pendiente de aprobación         |                                                             |
+| 3    | Terminada, 15 de noviembre 2026 | 106 pruebas sin base y 230 con base; `npm run chat:probar`  |
+| 4    | Pendiente de aprobación         |                                                             |
 
-Decisiones tomadas: no usar pgvector por el momento (la Fase 8 queda en espera) y trabajar en
-la rama `chatbot` para integrarla con un pull request.
+Decisiones tomadas:
+
+- No usar pgvector por el momento (la Fase 8 queda en espera).
+- Trabajar en la rama `chatbot`, con un commit por fase, para integrarla con un pull request.
+- Usar un modelo ligero de Gemini (`gemini-3.5-flash-lite`) y revisarlo conforme avance el
+  proyecto.
+- No tocar el frontend por ahora: el equipo tiene su diseño en Figma. La Fase 6 queda en espera;
+  el chat se prueba con Postman o `curl`.
 
 ---
 

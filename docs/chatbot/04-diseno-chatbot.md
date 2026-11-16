@@ -46,20 +46,22 @@ const ClienteGemini = new GoogleGenAI({
 });
 ```
 
-**Lo que encontré en la documentación actual, con una duda honesta:**
+**Comprobado en la Fase 3 (15 de noviembre de 2026), con una llamada real:**
 
-- El README del SDK confirma que `enterprise: true` selecciona Agent Platform y que la opción
-  anterior `vertexai: true` sigue funcionando.
-- Los ejemplos de JavaScript con `enterprise: true` usan proyecto y región, no API key. Para el
-  caso "API key" el mismo README dice: _selecciónalo con `vertexai: true` y una API key_. El
-  ejemplo en Python sí combina `enterprise=True` con la key.
-- Es decir, **no hay un ejemplo oficial en JavaScript con `enterprise: true` + `apiKey`**. Lo más
-  probable es que funcione, pero no lo doy por hecho.
+- `enterprise: true` junto con `apiKey` funciona en JavaScript con la versión 3.3 del SDK. La
+  documentación no traía ese ejemplo, pero el código del SDK lo contempla y la prueba lo
+  confirmó.
+- La dirección que usa el cliente es `https://aiplatform.googleapis.com/`: Agent Platform, no AI
+  Studio. Además, el servicio se niega a funcionar si el cliente no quedó en Agent Platform.
+- Las peticiones llegan a tu proyecto de Google Cloud, que es donde aplican los créditos.
+- El modelo ligero entiende las consultas preparadas: ante "¿Tienen algún libro de Juan Rulfo
+  disponible?" pidió `buscar_libros(autor: "Juan Rulfo")` y, con el resultado, respondió de
+  manera formal con los datos exactos. Esa conversación completa costó 239 tokens de entrada y
+  77 de salida.
+- Un detalle para la Fase 4: el modelo tiende a responder con formato Markdown (negritas y
+  viñetas). Hay que pedirle texto simple o convertirlo al mostrarlo.
 
-Por eso la Fase 3 empieza con una prueba mínima de una sola llamada. Si `enterprise: true` no
-acepta la key, se cambia esa línea por `vertexai: true` (la misma plataforma, el nombre
-anterior). El resto del diseño no cambia. En ninguno de los dos casos se usa AI Studio; la
-prueba verifica además que la dirección llamada sea `aiplatform.googleapis.com`.
+Para repetir la comprobación: `npm run chat:probar`.
 
 ### Sobre tu key
 
@@ -72,10 +74,19 @@ prueba verifica además que la dirección llamada sea `aiplatform.googleapis.com
 
 ### Modelo
 
-Un modelo de la familia **Flash**: rápido, barato y suficiente para preguntas de biblioteca. El
-nombre exacto va en `GEMINI_MODELO` para cambiarlo sin tocar código. Los ejemplos oficiales
-actuales usan `gemini-3.8-flash`; hay que confirmar cuál tiene habilitado tu proyecto (pregunta
-abierta 4).
+Se usa **`gemini-3.5-flash-lite`**, un modelo ligero: rápido, económico y suficiente para
+preguntas de biblioteca. El nombre va en `GEMINI_MODELO` para cambiarlo sin tocar código.
+
+Lo que respondió tu proyecto al probar cada modelo:
+
+| Modelo                                                                                      | Resultado                                                               |
+| ------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| `gemini-3.5-flash-lite`                                                                     | Disponible. Es el elegido                                               |
+| `gemini-3.1-flash-lite`                                                                     | Disponible                                                              |
+| `gemini-3.8-flash`                                                                          | Disponible, pero "piensa" antes de responder y eso se cobra como salida |
+| `gemini-3.8-flash-lite`, `gemini-3-flash-lite`, `gemini-2.5-flash-lite`, `gemini-2.5-flash` | No disponibles                                                          |
+
+Si más adelante las respuestas se quedan cortas, el siguiente paso natural es `gemini-3.8-flash`.
 
 ## Dudas sobre ejemplares: SQL, RAG o combinación
 

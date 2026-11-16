@@ -185,17 +185,18 @@ Para detener la aplicación: `Ctrl + C` en la terminal de `npm run inicio`.
 
 ### Scripts del backend
 
-| Script              | Uso                                                     |
-| ------------------- | ------------------------------------------------------- |
-| `npm run inicio`    | API y front juntos (http://127.0.0.1:5173)              |
-| `npm run api`       | API con recarga automática (nodemon)                    |
-| `npm run api:start` | API sin recarga                                         |
-| `npm run db:reset`  | Recrea la base: esquema → migraciones → semillas        |
-| `npm run db:migrar` | Aplica solo las migraciones que falten, sin borrar nada |
-| `npm test`          | Pruebas del front y de la API (no necesitan BD)         |
-| `npm run test:bd`   | Pruebas de integración contra la base real              |
-| `npm run lint`      | ESLint con las reglas del Estándar de Codificación      |
-| `npm run verificar` | Lint + formato + pruebas; ejecutar antes de cada commit |
+| Script                | Uso                                                                |
+| --------------------- | ------------------------------------------------------------------ |
+| `npm run inicio`      | API y front juntos (http://127.0.0.1:5173)                         |
+| `npm run api`         | API con recarga automática (nodemon)                               |
+| `npm run api:start`   | API sin recarga                                                    |
+| `npm run db:reset`    | Recrea la base: esquema → migraciones → semillas                   |
+| `npm run db:migrar`   | Aplica solo las migraciones que falten, sin borrar nada            |
+| `npm run chat:probar` | Comprueba la conexión del asistente con Gemini (gasta unos tokens) |
+| `npm test`            | Pruebas del front y de la API (no necesitan BD)                    |
+| `npm run test:bd`     | Pruebas de integración contra la base real                         |
+| `npm run lint`        | ESLint con las reglas del Estándar de Codificación                 |
+| `npm run verificar`   | Lint + formato + pruebas; ejecutar antes de cada commit            |
 
 ### Base de datos
 

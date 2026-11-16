@@ -12,6 +12,7 @@
     "api:start": "node servidor.js",
     "db:reset": "node db/reiniciarBaseDatos.js",
     "db:migrar": "node db/aplicarMigraciones.js",
+    "chat:probar": "node servicios/chat/probarConexion.js",
     "test": "node --test tests/*.test.mjs",
     "test:bd": "node --test --test-concurrency=1 --test-timeout=30000 tests/integracion/*.test.mjs",
     "lint": "eslint .",
@@ -35,6 +36,7 @@
     ]
   },
   "dependencies": {
+    "@google/genai": "^3.3.0",
     "bcrypt": "^6.0.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",

@@ -50,6 +50,16 @@ const CHAT_BD =
     ? Object.freeze({ user: process.env.CHAT_PGUSER, password: process.env.CHAT_PGPASSWORD })
     : null;
 
+// Asistente Ducky: modelo de Gemini en Gemini Enterprise Agent Platform (Google Cloud). También
+// es opcional: sin la key, o con CHAT_HABILITADO=false, el asistente queda apagado y el resto
+// de la API funciona igual.
+const MODELO_GEMINI_POR_OMISION = 'gemini-3.5-flash-lite'; // Modelo ligero: rápido y económico
+const GEMINI = Object.freeze({
+  habilitado: process.env.CHAT_HABILITADO !== 'false' && Boolean(process.env.GEMINI_API_KEY),
+  apiKey: process.env.GEMINI_API_KEY || null,
+  modelo: process.env.GEMINI_MODELO || MODELO_GEMINI_POR_OMISION,
+});
+
 const ENTORNO = Object.freeze({
   PUERTO: Number(process.env.PUERTO) || 3000,
   NODE_ENV: process.env.NODE_ENV || 'development',
@@ -68,6 +78,7 @@ const ENTORNO = Object.freeze({
     password: process.env.PGPASSWORD,
   }),
   CHAT_BD,
+  GEMINI,
 });
 
 export default ENTORNO;
