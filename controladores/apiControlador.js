@@ -85,6 +85,9 @@ const RUTAS_DISPONIBLES = [
     ruta: '/solicitudes/:folio/entrega-catalogo',
     descripcion: 'Entregar lote al catálogo',
   },
+  { metodo: 'POST', ruta: '/chat/mensajes', descripcion: 'Preguntar al asistente Ducky' },
+  { metodo: 'GET', ruta: '/chat/conversacion', descripcion: 'Conversación abierta con Ducky' },
+  { metodo: 'POST', ruta: '/chat/reinicio', descripcion: 'Reiniciar la conversación con Ducky' },
 ];
 
 /**

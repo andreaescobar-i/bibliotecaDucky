@@ -79,6 +79,11 @@ const ENTORNO = Object.freeze({
   }),
   CHAT_BD,
   GEMINI,
+  // Límites de uso del asistente, para controlar el gasto
+  CHAT: Object.freeze({
+    LIMITE_POR_MINUTO: Number(process.env.CHAT_LIMITE_POR_MINUTO) || 6,
+    MAX_CARACTERES: Number(process.env.CHAT_MAX_CARACTERES) || 500,
+  }),
 });
 
 export default ENTORNO;

@@ -27,7 +27,23 @@ publicar.
 | 1    | Terminada, 15 de noviembre 2026 | 79 pruebas sin base y 206 con base; app encendida y probada |
 | 2    | Terminada, 15 de noviembre 2026 | 88 pruebas sin base y 230 con base; rama `chatbot`          |
 | 3    | Terminada, 15 de noviembre 2026 | 106 pruebas sin base y 230 con base; `npm run chat:probar`  |
-| 4    | Pendiente de aprobación         |                                                             |
+| 4    | Terminada, 15 de noviembre 2026 | 129 pruebas sin base y 245 con base; preguntas reales       |
+| 5    | Pendiente de aprobación         |                                                             |
+
+Lo que quedó distinto del plan en la Fase 4:
+
+- Se agregó la consulta "mi cuenta" (préstamos activos y adeudos pendientes de quien pregunta),
+  que el plan dejaba para después.
+- La búsqueda por texto libre ignora plurales, género y palabras de relleno, para que "los
+  mexicanos" encuentre "identidad mexicana". Sigue siendo búsqueda por palabras, no por
+  significado.
+- Si la base de datos falla, la API responde que no pudo consultar el catálogo; no se le pide al
+  modelo que conteste sin datos.
+- Los límites por día y el tope global siguen pendientes para la Fase 7. Ya funciona el límite
+  por minuto.
+
+Costo medido con preguntas reales: unos 2,900 tokens de entrada y 60 de salida por pregunta. La
+mayor parte son las instrucciones y la descripción de las consultas, que viajan en cada llamada.
 
 Decisiones tomadas:
 

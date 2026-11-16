@@ -232,6 +232,8 @@ function normalizarRespuesta(respuesta, modelo) {
  *   ([{ role: 'user' | 'model', parts: [...] }]).
  * @param {string} [opciones.instrucciones] - Reglas de comportamiento del asistente.
  * @param {Object[]} [opciones.herramientas] - Declaraciones de las consultas preparadas.
+ * @param {boolean} [opciones.sinNuevasConsultas] - true para exigir una respuesta en texto: el
+ *   modelo conserva las consultas ya hechas pero no puede pedir más.
  * @param {number} [opciones.maxTokensSalida] - Largo máximo de la respuesta.
  * @param {number} [opciones.esperaMs] - Tiempo máximo de espera.
  * @param {number} [opciones.esperaReintentoMs] - Pausa antes del reintento.
@@ -243,6 +245,7 @@ async function generarRespuesta({
   contenidos,
   instrucciones,
   herramientas,
+  sinNuevasConsultas = false,
   maxTokensSalida = MAX_TOKENS_SALIDA,
   esperaMs = ESPERA_RESPUESTA_MS,
   esperaReintentoMs = ESPERA_REINTENTO_MS,
@@ -259,6 +262,9 @@ async function generarRespuesta({
       maxOutputTokens: maxTokensSalida,
       ...(instrucciones ? { systemInstruction: instrucciones } : {}),
       ...(herramientas?.length ? { tools: [{ functionDeclarations: herramientas }] } : {}),
+      ...(herramientas?.length && sinNuevasConsultas
+        ? { toolConfig: { functionCallingConfig: { mode: 'NONE' } } }
+        : {}),
     },
   };
 

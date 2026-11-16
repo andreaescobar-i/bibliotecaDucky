@@ -376,6 +376,36 @@ Todas las respuestas de error de la API tienen la forma
 - Estados con los textos del front: Por autorizar → En Tesorería → Autorizado / Rechazado →
   Recibido parcialmente → Recibido → Entregado al catálogo.
 
+### Asistente Ducky (ChatBot)
+
+| Método | Ruta                     | Permiso         | Descripción                                             |
+| ------ | ------------------------ | --------------- | ------------------------------------------------------- |
+| POST   | `/api/chat/mensajes`     | Sesión iniciada | `{ mensaje }` → respuesta del asistente                 |
+| GET    | `/api/chat/conversacion` | Sesión iniciada | Conversación abierta de la cuenta                       |
+| POST   | `/api/chat/reinicio`     | Sesión iniciada | Cierra la conversación; la siguiente pregunta abre otra |
+
+- **Solo backend por ahora:** la ventana "Asistente Ducky" del front sigue con sus textos fijos
+  hasta que el equipo la conecte. Se prueba con `curl` o con
+  [`docs/postman/SIGB-Asistente.postman_collection.json`](docs/postman/SIGB-Asistente.postman_collection.json).
+- **Cómo responde:** el modelo Gemini (por Gemini Enterprise Agent Platform de Google Cloud) no
+  escribe SQL. Elige entre consultas ya escritas (`servicios/chat/herramientas.js`): buscar
+  libros, ficha con ejemplares, un ejemplar, temas y tipos de uso, reglas de préstamo y la cuenta
+  de quien pregunta. El backend las ejecuta y el modelo redacta con esos datos.
+- **Solo lectura:** las consultas del catálogo usan el usuario de PostgreSQL `CHAT_PGUSER`, que
+  solo puede leer las vistas del esquema `chat`.
+- **Permisos:** las consultas del catálogo exigen "Consultar libros"; la ubicación solo se da con
+  "Consultar ubicación". "Mi cuenta" usa siempre la cuenta de la sesión, nunca la que diga la
+  pregunta.
+- **Historial:** cada pregunta y respuesta queda en `sesion_chat` y `mensaje_chat`, con el
+  modelo, los tokens y las consultas hechas. El modelo recibe los últimos 10 mensajes.
+- **Límites:** `CHAT_LIMITE_POR_MINUTO` (6) preguntas por cuenta y `CHAT_MAX_CARACTERES` (500)
+  por pregunta. Una pregunta vacía o demasiado larga no llega al modelo.
+- **Fallas:** si Google no responde o la base falla, la API contesta 503 con un mensaje claro y
+  nunca expone el detalle técnico. Con `CHAT_HABILITADO=false` o sin `GEMINI_API_KEY` el
+  asistente queda apagado y el resto de la API funciona igual.
+- **Pruebas:** usan un modelo simulado; no llaman a Google ni gastan créditos.
+  `npm run chat:probar` sí hace una llamada real mínima.
+
 ### Front conectado a la API
 
 Para usar la aplicación completa, desde esta carpeta:

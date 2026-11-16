@@ -1,0 +1,292 @@
+{
+  "info": {
+    "name": "SIGB · Asistente Ducky",
+    "description": "Rutas del asistente Ducky (ChatBot). Cada pregunta hace una llamada real a Gemini y consume créditos; el límite por omisión es de 6 preguntas por minuto por cuenta. Requiere GEMINI_API_KEY, CHAT_PGUSER y CHAT_PGPASSWORD en .env y haber ejecutado npm run db:reset o npm run db:migrar.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000/api"
+    },
+    {
+      "key": "contrasena",
+      "value": "Ducky2026"
+    }
+  ],
+  "item": [
+    {
+      "name": "Sin sesión: pide iniciar sesión",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": ["pm.test(\"HTTP 401\", () => pm.response.to.have.status(401));"]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/chat/conversacion",
+          "host": ["{{baseUrl}}"],
+          "path": ["chat", "conversacion"]
+        }
+      }
+    },
+    {
+      "name": "Iniciar sesión · Alumna",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": ["pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"identificador\": \"A01234567\",\n  \"contrasena\": \"{{contrasena}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/auth/login",
+          "host": ["{{baseUrl}}"],
+          "path": ["auth", "login"]
+        }
+      }
+    },
+    {
+      "name": "¿Tienen un libro?",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": ["pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"mensaje\": \"¿Tienen Pedro Páramo?\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/chat/mensajes",
+          "host": ["{{baseUrl}}"],
+          "path": ["chat", "mensajes"]
+        }
+      }
+    },
+    {
+      "name": "Pregunta de seguimiento",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": ["pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"mensaje\": \"¿Y dónde está?\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/chat/mensajes",
+          "host": ["{{baseUrl}}"],
+          "path": ["chat", "mensajes"]
+        }
+      }
+    },
+    {
+      "name": "Libro que no existe",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": ["pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"mensaje\": \"¿Tienen El Quijote?\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/chat/mensajes",
+          "host": ["{{baseUrl}}"],
+          "path": ["chat", "mensajes"]
+        }
+      }
+    },
+    {
+      "name": "Mi cuenta",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": ["pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"mensaje\": \"¿Cuándo vencen mis préstamos y debo algo?\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/chat/mensajes",
+          "host": ["{{baseUrl}}"],
+          "path": ["chat", "mensajes"]
+        }
+      }
+    },
+    {
+      "name": "Pregunta vacía",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": ["pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));"]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"mensaje\": \"   \"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/chat/mensajes",
+          "host": ["{{baseUrl}}"],
+          "path": ["chat", "mensajes"]
+        }
+      }
+    },
+    {
+      "name": "Ver la conversación abierta",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": ["pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/chat/conversacion",
+          "host": ["{{baseUrl}}"],
+          "path": ["chat", "conversacion"]
+        }
+      }
+    },
+    {
+      "name": "Reiniciar la conversación",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": ["pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/chat/reinicio",
+          "host": ["{{baseUrl}}"],
+          "path": ["chat", "reinicio"]
+        }
+      }
+    }
+  ]
+}
