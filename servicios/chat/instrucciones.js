@@ -7,6 +7,8 @@
  * Fecha: 15 de Noviembre de 2026
  */
 
+import { crearGuia } from './guiaApp.js';
+
 const ZONA_HORARIA = 'America/Mexico_City';
 
 // Frase exacta con la que el asistente reconoce que no tiene un dato. El controlador la usa
@@ -63,14 +65,16 @@ function formatearFechaLarga(fecha) {
  * @param {Object} usuario - Cuenta de la sesión (req.usuario).
  * @param {Date} fecha - Momento actual.
  * @returns {string} Instrucciones completas para el modelo.
- * Limitaciones: No incluye identificador, correo ni teléfono de la cuenta.
+ * Limitaciones: Incluye nombre, rol, perfil y lo que la cuenta puede hacer; no incluye
+ *   identificador, correo ni teléfono.
  */
 function crearInstrucciones(usuario, fecha) {
   return `${REGLAS_ASISTENTE}
 
 CONTEXTO DE ESTA CONVERSACIÓN
 - Hoy es ${formatearFechaLarga(fecha)}.
-- Quien pregunta se llama ${usuario.primer_nombre} y su rol en el sistema es ${usuario.rol_nombre}.`;
+
+${crearGuia(usuario)}`;
 }
 
 export { FRASE_SIN_INFORMACION, crearInstrucciones };

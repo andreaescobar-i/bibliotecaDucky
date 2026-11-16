@@ -28,7 +28,9 @@ publicar.
 | 2    | Terminada, 15 de noviembre 2026 | 88 pruebas sin base y 230 con base; rama `chatbot`          |
 | 3    | Terminada, 15 de noviembre 2026 | 106 pruebas sin base y 230 con base; `npm run chat:probar`  |
 | 4    | Terminada, 15 de noviembre 2026 | 129 pruebas sin base y 245 con base; preguntas reales       |
-| 5    | Pendiente de aprobación         |                                                             |
+| 5    | Terminada, 15 de noviembre 2026 | 143 pruebas sin base y 254 con base; app abierta por rol    |
+| 6    | En espera (frontend del equipo) |                                                             |
+| 7    | Pendiente de aprobación         |                                                             |
 
 Lo que quedó distinto del plan en la Fase 4:
 

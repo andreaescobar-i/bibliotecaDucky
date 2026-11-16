@@ -344,7 +344,7 @@ describe('Asistente: conversación', () => {
       ],
     );
     // Las instrucciones viajan en cada pregunta, con el rol de quien pregunta
-    assert.match(solicitudes[1].config.systemInstruction, /su rol en el sistema es Alumno/);
+    assert.match(solicitudes[1].config.systemInstruction, /Rol: Alumno\. Perfil: Alumno\./);
   });
 
   test('cada cuenta ve solo su conversación, sin datos internos', async () => {
