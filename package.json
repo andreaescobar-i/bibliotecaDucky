@@ -11,6 +11,7 @@
     "api": "nodemon servidor.js",
     "api:start": "node servidor.js",
     "db:reset": "node db/reiniciarBaseDatos.js",
+    "db:migrar": "node db/aplicarMigraciones.js",
     "test": "node --test tests/*.test.mjs",
     "test:bd": "node --test --test-concurrency=1 --test-timeout=30000 tests/integracion/*.test.mjs",
     "lint": "eslint .",

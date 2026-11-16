@@ -10,6 +10,12 @@ import fs from 'node:fs';
 import path from 'node:path';
 import pg from 'pg';
 import ENTORNO from '../config/entorno.js';
+import {
+  listarMigraciones,
+  asegurarTablaControl,
+  registrarMigraciones,
+  configurarRolLectura,
+} from './utilidadesMigracion.js';
 
 // Carpetas que se ejecutan en este orden; dentro de cada una, por nombre de archivo
 const CARPETAS_SQL = ['esquema', 'migraciones', 'semillas'];
@@ -116,6 +122,19 @@ async function reiniciarBaseDatos() {
   await ClienteBd.connect();
   try {
     await ejecutarArchivosSql(ClienteBd);
+    // Se anota lo aplicado para que npm run db:migrar solo ejecute lo que llegue después
+    await asegurarTablaControl(ClienteBd);
+    await registrarMigraciones(
+      ClienteBd,
+      listarMigraciones().map((migracion) => migracion.nombre),
+    );
+    console.log(
+      `  ${await configurarRolLectura(ClienteBd, {
+        chatBd: ENTORNO.CHAT_BD,
+        baseDatos: nombreBd,
+        usuarioPropietario: ENTORNO.BD.user,
+      })}`,
+    );
     await mostrarResumen(ClienteBd);
   } finally {
     await ClienteBd.end();

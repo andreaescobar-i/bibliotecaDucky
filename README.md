@@ -191,6 +191,7 @@ Para detener la aplicación: `Ctrl + C` en la terminal de `npm run inicio`.
 | `npm run api`       | API con recarga automática (nodemon)                    |
 | `npm run api:start` | API sin recarga                                         |
 | `npm run db:reset`  | Recrea la base: esquema → migraciones → semillas        |
+| `npm run db:migrar` | Aplica solo las migraciones que falten, sin borrar nada |
 | `npm test`          | Pruebas del front y de la API (no necesitan BD)         |
 | `npm run test:bd`   | Pruebas de integración contra la base real              |
 | `npm run lint`      | ESLint con las reglas del Estándar de Codificación      |
@@ -203,6 +204,17 @@ Para detener la aplicación: `Ctrl + C` en la terminal de `npm run inicio`.
 | `db/esquema/`     | `000_biblioteca_schema.sql`: copia sin cambios del esquema del diagrama |
 | `db/migraciones/` | `001_sprint1.sql`: lo que el esquema base no cubría para el Sprint 1    |
 | `db/semillas/`    | Roles, permisos, perfiles, CIAA/Capital Humano simulados, catálogo...   |
+
+`npm run db:reset` **borra** la base de `PGDATABASE` y la crea de nuevo con los datos de prueba.
+Para actualizar una base que ya tiene datos (por ejemplo, después de traer cambios del
+repositorio) usa `npm run db:migrar`: anota en la tabla `migracion_aplicada` lo que ya se aplicó
+y ejecuta solo lo nuevo.
+
+`003_chatbot.sql` prepara la base para el asistente Ducky: completa `sesion_chat` y
+`mensaje_chat` y crea el esquema `chat`, con vistas de solo consulta del catálogo. Si el `.env`
+define `CHAT_PGUSER` y `CHAT_PGPASSWORD`, los dos comandos crean además ese usuario de PostgreSQL
+de **solo lectura**, que únicamente puede leer esas vistas. El detalle está en
+[`docs/chatbot/`](docs/chatbot/).
 
 Cuentas de prueba (contraseña de todas: **`Ducky2026`**):
 

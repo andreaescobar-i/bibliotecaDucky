@@ -43,6 +43,13 @@ if (!ES_PRUEBA) {
   validarEntorno(process.env);
 }
 
+// Usuario de PostgreSQL de solo lectura del asistente Ducky. Es opcional: sin él la API funciona
+// y solo el asistente queda sin consultar el catálogo.
+const CHAT_BD =
+  process.env.CHAT_PGUSER && process.env.CHAT_PGPASSWORD
+    ? Object.freeze({ user: process.env.CHAT_PGUSER, password: process.env.CHAT_PGPASSWORD })
+    : null;
+
 const ENTORNO = Object.freeze({
   PUERTO: Number(process.env.PUERTO) || 3000,
   NODE_ENV: process.env.NODE_ENV || 'development',
@@ -60,6 +67,7 @@ const ENTORNO = Object.freeze({
     user: process.env.PGUSER,
     password: process.env.PGPASSWORD,
   }),
+  CHAT_BD,
 });
 
 export default ENTORNO;
