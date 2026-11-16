@@ -22,6 +22,12 @@
 // "todos" y, cuando existe, AL MENOS UNO de "alguno" (igual que en las rutas de la API).
 const ACCIONES = Object.freeze([
   {
+    clave: 'OPERAR_CIRCULACION',
+    descripcion:
+      'Registrar préstamos y boletas, renovaciones, devoluciones, inscripciones en lista de espera y remitir multas con Tesorería simulada',
+    todos: ['OPERAR_CIRCULACION'],
+  },
+  {
     clave: 'CONSULTAR_CATALOGO',
     descripcion: 'Buscar libros en el catálogo y ver su ficha y la disponibilidad de ejemplares',
     todos: ['CONSULTAR_LIBROS'],
@@ -127,11 +133,12 @@ const ACCIONES = Object.freeze([
 // Secciones del menú que la aplicación muestra a cada rol y, de forma general, qué hay en ellas
 const SECCIONES_LECTOR = Object.freeze([
   { nombre: 'Catálogo', contenido: 'buscar libros y ver su detalle' },
-  { nombre: 'Mi cuenta', contenido: 'préstamos y adeudos; aún no habilitada' },
+  { nombre: 'Mi cuenta', contenido: 'préstamos, adeudos y lista de espera' },
 ]);
 const OPERACIONES = Object.freeze({
   nombre: 'Operaciones',
-  contenido: 'préstamos, devolución, renovación, multas y pagos, y suspendidos; aún no habilitadas',
+  contenido:
+    'préstamos y boletas, devolución, renovación, lista de espera y multas; pagos y suspendidos siguen pendientes',
 });
 const SECCIONES_POR_ROL = Object.freeze({
   Alumno: SECCIONES_LECTOR,
@@ -167,14 +174,8 @@ const NOTAS_POR_ROL = Object.freeze({
 
 // Funciones que la aplicación muestra pero aún no están habilitadas, con el sprint en que se
 // entregan y los roles que las ven en su menú
-const ROLES_LECTORES = ['Alumno', 'Maestro', 'Colaborador'];
 const ROLES_OPERACION = ['Bibliotecario', 'Administrador'];
 const FUNCIONES_PENDIENTES = Object.freeze([
-  { nombre: 'Mi cuenta: préstamos y adeudos', sprint: 'Sprint 2', roles: ROLES_LECTORES },
-  { nombre: 'Registrar préstamo', sprint: 'Sprint 2', roles: ROLES_OPERACION },
-  { nombre: 'Devolución', sprint: 'Sprint 2', roles: ROLES_OPERACION },
-  { nombre: 'Renovación', sprint: 'Sprint 2', roles: ROLES_OPERACION },
-  { nombre: 'Multas y pagos', sprint: 'Sprint 3', roles: ROLES_OPERACION },
   { nombre: 'Alumnos suspendidos', sprint: 'Sprint 3', roles: ROLES_OPERACION },
   { nombre: 'Reportes e inventario', sprint: 'Sprint 5', roles: ['Administrador'] },
 ]);
@@ -292,7 +293,7 @@ ${listar(
   pendientes.map((funcion) => `${funcion.nombre} (se entrega en el ${funcion.sprint})`),
   'Ninguna.',
 )}
-- Para todos los roles: préstamos, devoluciones, renovaciones, multas, pagos y reportes todavía no se operan en el sistema; se atienden con el personal de la biblioteca.
+- Las operaciones de circulación y la consulta de multas ya están disponibles con el permiso correspondiente. El envío a Tesorería es simulado; el registro de pagos y los reportes siguen pendientes.
 
 LO QUE PUEDEN HACER LOS DEMÁS ROLES Y PERFILES (de forma general, según los perfiles activos)
 ${listar(

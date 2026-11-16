@@ -67,7 +67,8 @@ describe('Guía: qué puede hacer cada perfil', () => {
   });
 
   test('el Bibliotecario de ventanilla además gestiona libros, pero no cuentas ni compras', () => {
-    assert.deepEqual(permitidas([...CONSULTA, ...CATALOGO]), [
+    assert.deepEqual(permitidas([...CONSULTA, ...CATALOGO, 'OPERAR_CIRCULACION']), [
+      'OPERAR_CIRCULACION',
       ...ACCIONES_CONSULTA,
       ...ACCIONES_CATALOGO,
     ]);
@@ -96,7 +97,13 @@ describe('Guía: qué puede hacer cada perfil', () => {
   });
 
   test('el Administrador general puede todo', () => {
-    const resultado = clasificarAcciones([...CONSULTA, ...CATALOGO, ...COMPRAS, ...CUENTAS]);
+    const resultado = clasificarAcciones([
+      ...CONSULTA,
+      ...CATALOGO,
+      ...COMPRAS,
+      ...CUENTAS,
+      'OPERAR_CIRCULACION',
+    ]);
     assert.equal(resultado.permitidas.length, ACCIONES.length);
     assert.deepEqual(resultado.noPermitidas, []);
   });
@@ -157,7 +164,7 @@ describe('Guía: texto para el asistente', () => {
       perfil_nombre: 'Alumno',
       permisos: CONSULTA,
     });
-    assert.match(alumno, /Mi cuenta: préstamos y adeudos \(se entrega en el Sprint 2\)/);
+    assert.match(alumno, /Mi cuenta: préstamos, adeudos y lista de espera/);
     assert.ok(!alumno.includes('Reportes e inventario (se entrega'));
     assert.ok(!guia.includes('Mi cuenta: préstamos y adeudos (se entrega'));
   });
@@ -170,7 +177,7 @@ describe('Guía: qué pueden hacer los demás roles', () => {
       nombre: 'Administrador general',
       rol_nombre: 'Administrador',
       rol_activo: true,
-      permisos: [...CONSULTA, ...CATALOGO, ...COMPRAS, ...CUENTAS],
+      permisos: [...CONSULTA, ...CATALOGO, ...COMPRAS, ...CUENTAS, 'OPERAR_CIRCULACION'],
     },
     {
       nombre: 'Bibliotecario de ventanilla',
@@ -258,7 +265,7 @@ describe('Guía: sigue de acuerdo con el resto del proyecto', () => {
       ACCIONES.flatMap((accion) => [...accion.todos, ...(accion.alguno ?? [])]),
     );
 
-    assert.equal(permisosBase.length, 19);
+    assert.equal(permisosBase.length, 20);
     assert.deepEqual(
       [...permisosGuia].sort(),
       [...permisosBase].sort(),

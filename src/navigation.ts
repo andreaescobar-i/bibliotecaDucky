@@ -21,6 +21,8 @@ export const defaultRoutes: Record<string, string> = {
 };
 export function routeForRole(id: string, role: string) {
   if (id === '27-759') return id;
+  if (id === 'circulacion-espera')
+    return ['Administrador', 'Bibliotecario'].includes(role) ? id : defaultRoutes[role];
   const entry = manifest.find((item) => item.module === id && !item.overlay);
   if (!entry) return defaultRoutes[role];
   if (['1-336', '272-2449', '207-1228'].includes(id)) {

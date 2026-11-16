@@ -29,6 +29,7 @@ const TEXTO_ESTADO_EJEMPLAR = Object.freeze({
   DISPONIBLE: 'Disponible',
   PRESTADO: 'Prestado',
   DADO_DE_BAJA: 'Dado de baja',
+  EN_REVISION: 'En revisión',
 });
 
 /**

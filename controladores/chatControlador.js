@@ -12,6 +12,7 @@ import * as perfilModelo from '../modelos/perfilModelo.js';
 import * as chatVista from '../vistas/chatVista.js';
 import * as geminiServicio from '../servicios/geminiServicio.js';
 import { RESULTADOS, responderPregunta } from '../servicios/chat/conversacion.js';
+import { respuestaApp } from '../servicios/chat/respuestasApp.js';
 import { ErrorConsulta } from '../servicios/chat/herramientas.js';
 import ErrorAplicacion from '../utilidades/errorAplicacion.js';
 import { limpiarTexto } from '../utilidades/validacion.js';
@@ -90,7 +91,8 @@ function obtenerMensajeDeFalla(err) {
 async function postMensaje(req, res, next) {
   try {
     const pregunta = validarPregunta(req.body);
-    if (!geminiServicio.estaDisponible()) {
+    const ayuda = respuestaApp(pregunta);
+    if (!ayuda && !geminiServicio.estaDisponible()) {
       throw new ErrorAplicacion(ESTADO_NO_DISPONIBLE, MENSAJE_NO_DISPONIBLE);
     }
 
@@ -101,6 +103,17 @@ async function postMensaje(req, res, next) {
       (await chatModelo.obtenerSesionAbierta(usuarioId)) ??
       (await chatModelo.crearSesion(usuarioId));
     const idSesion = sesion.id_sesion;
+    if (ayuda) {
+      await chatModelo.registrarMensaje({ idSesion, emisor: EMISOR_USUARIO, contenido: pregunta });
+      const guardado = await chatModelo.registrarMensaje({
+        idSesion,
+        emisor: EMISOR_ASISTENTE,
+        contenido: ayuda,
+        resultado: RESULTADOS.EXITO,
+      });
+      res.json(chatVista.formatearRespuesta(idSesion, { contenido: ayuda, ...guardado }));
+      return;
+    }
     const historial = await chatModelo.obtenerUltimosMensajes(idSesion, MAX_MENSAJES_HISTORIAL);
     // Perfiles activos con sus permisos: con ellos el asistente describe los demás roles
     const perfiles = await perfilModelo.listarPerfiles(true);

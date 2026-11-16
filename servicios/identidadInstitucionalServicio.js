@@ -17,12 +17,12 @@ import { TIPOS_IDENTIFICADOR } from '../utilidades/identificadores.js';
  * @param {string} identificador - Identificador normalizado.
  * @returns {Promise<Object|null>} Datos de la persona, o null si no existe en el sistema.
  */
-async function obtenerIdentidad(tipo, identificador) {
+async function obtenerIdentidad(tipo, identificador, cliente) {
   if (tipo === TIPOS_IDENTIFICADOR.MATRICULA) {
-    return identidadInstitucionalModelo.obtenerAlumno(identificador);
+    return identidadInstitucionalModelo.obtenerAlumno(identificador, cliente);
   }
   if (tipo === TIPOS_IDENTIFICADOR.NOMINA) {
-    return identidadInstitucionalModelo.obtenerEmpleado(identificador);
+    return identidadInstitucionalModelo.obtenerEmpleado(identificador, cliente);
   }
   return null;
 }
@@ -33,8 +33,8 @@ async function obtenerIdentidad(tipo, identificador) {
  * @param {string} identificador - Identificador normalizado.
  * @returns {Promise<boolean>} true solo si existe y está vigente.
  */
-async function consultarVigencia(tipo, identificador) {
-  const identidad = await obtenerIdentidad(tipo, identificador);
+async function consultarVigencia(tipo, identificador, cliente) {
+  const identidad = await obtenerIdentidad(tipo, identificador, cliente);
   return Boolean(identidad?.vigente);
 }
 

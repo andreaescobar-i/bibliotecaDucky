@@ -85,6 +85,43 @@ const RUTAS_DISPONIBLES = [
     ruta: '/solicitudes/:folio/entrega-catalogo',
     descripcion: 'Entregar lote al catálogo',
   },
+  { metodo: 'POST', ruta: '/circulacion/prestamos', descripcion: 'Registrar préstamo' },
+  {
+    metodo: 'GET',
+    ruta: '/circulacion/prestamos/:folio',
+    descripcion: 'Consultar préstamo y sus datos de boleta',
+  },
+  {
+    metodo: 'POST',
+    ruta: '/circulacion/prestamos/:folio/renovacion',
+    descripcion: 'Renovar préstamo',
+  },
+  {
+    metodo: 'POST',
+    ruta: '/circulacion/prestamos/:folio/devolucion',
+    descripcion: 'Registrar devolución y multa por atraso',
+  },
+  {
+    metodo: 'POST',
+    ruta: '/circulacion/espera',
+    descripcion: 'Inscripción a la lista de espera en ventanilla',
+  },
+  {
+    metodo: 'POST',
+    ruta: '/circulacion/mi-espera',
+    descripcion: 'Inscripción propia en la lista de espera',
+  },
+  {
+    metodo: 'GET',
+    ruta: '/circulacion/mi-cuenta',
+    descripcion: 'Historial, adeudos y turnos de la cuenta',
+  },
+  { metodo: 'GET', ruta: '/circulacion/multas', descripcion: 'Consultar multas por atraso' },
+  {
+    metodo: 'POST',
+    ruta: '/circulacion/multas/:id/envio',
+    descripcion: 'Remitir multa a Tesorería',
+  },
   { metodo: 'POST', ruta: '/chat/mensajes', descripcion: 'Preguntar al asistente Ducky' },
   { metodo: 'GET', ruta: '/chat/conversacion', descripcion: 'Conversación abierta con Ducky' },
   { metodo: 'POST', ruta: '/chat/reinicio', descripcion: 'Reiniciar la conversación con Ducky' },

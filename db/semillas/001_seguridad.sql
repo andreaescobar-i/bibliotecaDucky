@@ -40,15 +40,18 @@ INSERT INTO permiso (clave, nombre, modulo, descripcion) VALUES
     ('CONSULTAR_UBICACION',   'Consultar ubicación',         'CONSULTA', 'Ver librero y fila de cada ejemplar'),
     ('CONSULTAR_LISTADO',     'Consultar listado de libros', 'CONSULTA', 'Listado filtrado, PDF e impresión'),
     ('GESTIONAR_SOLICITUDES', 'Gestionar solicitudes de compra', 'COMPRAS', 'Preparar y enviar solicitudes a Tesorería'),
-    ('REGISTRAR_RECEPCIONES', 'Registrar recepciones',       'COMPRAS',  'Registrar entregas recibidas');
+    ('REGISTRAR_RECEPCIONES', 'Registrar recepciones',       'COMPRAS',  'Registrar entregas recibidas'),
+    ('OPERAR_CIRCULACION', 'Operar circulación', 'CIRCULACION', 'Registrar préstamos, renovaciones, devoluciones y remitir multas')
+ON CONFLICT (clave) DO NOTHING;
 
+-- El permiso OPERAR_CIRCULACION se crea en la migración 004.
 -- Matriz rol-permiso (máximo permitido por rol)
 INSERT INTO rol_permiso (rol_id, permiso_id)
 SELECT r.rol_id, p.permiso_id
 FROM rol r
 JOIN permiso p ON
     r.nombre = 'Administrador'
-    OR (r.nombre = 'Bibliotecario' AND p.modulo IN ('CATALOGO', 'CONSULTA', 'COMPRAS'))
+    OR (r.nombre = 'Bibliotecario' AND p.modulo IN ('CATALOGO', 'CONSULTA', 'COMPRAS', 'CIRCULACION'))
     OR (r.nombre = 'Comprador de libros' AND p.modulo IN ('CONSULTA', 'COMPRAS'))
     OR (r.nombre IN ('Alumno', 'Maestro', 'Colaborador') AND p.modulo = 'CONSULTA');
 
@@ -87,6 +90,7 @@ FROM perfil pf
 JOIN rol_permiso rp ON rp.rol_id = pf.rol_id
 JOIN permiso p ON p.permiso_id = rp.permiso_id
 WHERE pf.clave <> 'PRF-BIB-CON'
+    AND (p.modulo <> 'CIRCULACION' OR pf.clave IN ('PRF-ADM', 'PRF-BIB'))
     -- El Bibliotecario de ventanilla no compra: en el front las compras son del Comprador
     AND NOT (pf.clave = 'PRF-BIB' AND p.modulo = 'COMPRAS')
 UNION ALL

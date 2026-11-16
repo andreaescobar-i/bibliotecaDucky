@@ -11,6 +11,10 @@ import { chatHistory, resetChat, sendChat, type ChatMessage } from '../api';
 const MAX_CHARS = 500;
 
 const TOPICS = [
+  '¿Cuál es el objetivo de Biblioteca Ducky?',
+  '¿Qué incluye el sistema?',
+  '¿En qué plataforma puedo usarlo?',
+  '¿Cómo funciona la lista de espera?',
   '¿Qué puedo hacer en el sistema?',
   '¿Qué libros hay disponibles?',
   '¿Cuáles son mis préstamos y adeudos?',

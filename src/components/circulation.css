@@ -1,0 +1,101 @@
+.circulation,
+.circ-wait {
+  width: min(100% - 2rem, 56rem);
+  max-width: 100%;
+  margin: 2rem auto;
+  box-sizing: border-box;
+}
+.circulation h1 {
+  margin-top: 0;
+  color: #006e64;
+}
+.circulation form,
+.circ-wait {
+  display: grid;
+  gap: 0.875rem;
+  margin-bottom: 1rem;
+}
+.circulation label,
+.circ-wait label {
+  display: grid;
+  gap: 0.35rem;
+}
+.circulation :is(input, textarea, select),
+.circ-wait input {
+  width: 100%;
+  max-width: 100%;
+  padding: 0.65rem;
+  box-sizing: border-box;
+  border: 1px solid #bbb;
+  border-radius: 6px;
+  font: inherit;
+}
+.circulation :is(input, textarea, select):focus,
+.circ-wait input:focus {
+  outline: 2px solid #00766a;
+  outline-offset: 2px;
+}
+.circ-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin-bottom: 0.75rem;
+}
+.circulation .action,
+.circ-wait .action {
+  justify-self: start;
+}
+.circ-result {
+  padding: 1rem;
+  margin: 1rem 0;
+  border: 1px solid #c8dfda;
+  border-radius: 10px;
+  background: #f1faf8;
+}
+.circ-details {
+  display: grid;
+  gap: 0.4rem;
+  margin: 1rem 0;
+}
+.circ-details div {
+  display: grid;
+  grid-template-columns: minmax(6rem, 9rem) minmax(0, 1fr);
+  gap: 0.5rem;
+}
+.circ-details dt {
+  font-weight: 600;
+}
+.circ-details dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.circ-list {
+  padding: 0;
+  list-style: none;
+}
+.circ-list li {
+  border-top: 1px solid #ddd;
+  padding: 0.75rem 0;
+  display: grid;
+  gap: 0.25rem;
+  overflow-wrap: anywhere;
+}
+.circ-status,
+.circ-error {
+  border-radius: 6px;
+  padding: 0.6rem;
+  background: #e7f6f1;
+  color: #00594f;
+}
+.circ-error {
+  background: #fff0f0;
+  color: #9a1c1c;
+}
+.circ-print-frame {
+  position: fixed;
+  width: 1px;
+  height: 1px;
+  border: 0;
+  opacity: 0;
+  pointer-events: none;
+}

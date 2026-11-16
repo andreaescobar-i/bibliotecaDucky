@@ -13,8 +13,8 @@ import DbPool from '../config/db.js';
  * @param {string} matricula - Matrícula normalizada.
  * @returns {Promise<Object|null>} Datos del alumno, o null si no existe.
  */
-async function obtenerAlumno(matricula) {
-  const resultado = await DbPool.query(
+async function obtenerAlumno(matricula, cliente = DbPool) {
+  const resultado = await cliente.query(
     `SELECT matricula AS identificador, primer_nombre, primer_apellido, segundo_apellido,
             correo_institucional, vigente
      FROM externo.ciaa_alumno
@@ -29,8 +29,8 @@ async function obtenerAlumno(matricula) {
  * @param {string} nomina - Número de nómina normalizado.
  * @returns {Promise<Object|null>} Datos del empleado, o null si no existe.
  */
-async function obtenerEmpleado(nomina) {
-  const resultado = await DbPool.query(
+async function obtenerEmpleado(nomina, cliente = DbPool) {
+  const resultado = await cliente.query(
     `SELECT nomina AS identificador, primer_nombre, primer_apellido, segundo_apellido,
             correo_institucional, vigente
      FROM externo.capital_humano_empleado

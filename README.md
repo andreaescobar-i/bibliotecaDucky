@@ -39,8 +39,9 @@ Los seis roles son Alumno, Maestro, Colaborador, Bibliotecario, Administrador y 
   generados por la API; usuarios (alta, edición, roles, baja y reactivación); roles y perfiles
   (consulta y desactivación); libros y ejemplares (alta, edición, clasificación, etiquetas, bajas e
   historial); solicitudes de compra, presupuesto, recepciones y entrega al catálogo.
-- **Sprints 2 a 5:** préstamos, devolución, renovación, Mi cuenta, multas, suspendidos y reportes
-  muestran un aviso con el sprint en que se entregan. No muestran datos inventados.
+- **Circulación (Sprints 2 y 3):** préstamos, boletas, renovaciones, lista de espera,
+  devoluciones, multas por atraso y consulta de préstamos y adeudos en Mi cuenta.
+- **Pendiente:** registro de pagos, suspendidos y reportes.
 - **Asistente Ducky:** conectado a la API (`/api/chat`): responde con datos reales del catálogo y
   de la cuenta, según los permisos de quien pregunta. Su ventana es un diseño provisional.
 
@@ -432,8 +433,27 @@ así la cookie de sesión funciona sin configurar CORS en el navegador.
   clasificación, etiquetas, bajas) y compras (solicitudes, envío, autorización simulada,
   recepciones y entrega al catálogo). La lógica está en `src/api.ts` y en `src/App.tsx`.
 - **Cuentas nuevas:** al entrar con la contraseña temporal aparece un formulario para cambiarla.
-- **Sprints posteriores:** préstamos, devoluciones, renovaciones, multas, suspendidos y
-  reportes muestran un aviso hasta que tengan su API; no usan datos inventados.
+- **Circulación:** las pantallas de Operaciones y Mi cuenta consumen `/api/circulacion`.
+  El permiso `OPERAR_CIRCULACION` autoriza la operación de ventanilla.
+- **Pendiente:** registro de pagos, suspendidos y reportes.
+
+### Activar circulación en una base existente
+
+Con las variables de PostgreSQL configuradas en `.env`, ejecuta `npm run db:migrar` y
+reinicia la API. La migración `004_circulacion.sql` conserva los datos existentes y
+habilita el permiso para los perfiles base de Administración y Bibliotecario de ventanilla.
+No hace falta reiniciar ni volver a sembrar la base.
+
+- Ventanilla registra el préstamo por matrícula o nómina y clave de ejemplar. Puede volver
+  a abrir la boleta por folio, imprimirla o preparar un mensaje de correo o WhatsApp.
+- Las fechas cuentan de lunes a viernes y usan la zona de Monterrey. El atraso genera
+  $10 MXN por día hábil; Tesorería devuelve un acuse simulado. Si el envío falla, la multa
+  se conserva y se puede remitir desde Operaciones → Multas y Tesorería.
+- Los lectores ven su posición en Mi cuenta. Las renovaciones se bloquean si hay una
+  lista de espera y un ejemplar liberado se presta primero a quien encabeza la fila.
+- Las preguntas frecuentes del asistente sobre objetivo, alcance, plataforma y lista de
+  espera funcionan con la API y la base, sin configurar Gemini. Las preguntas abiertas
+  sí usan la configuración de Gemini.
 
 ### Documentación y pruebas del Sprint 1
 

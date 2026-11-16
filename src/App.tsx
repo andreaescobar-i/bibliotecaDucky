@@ -13,6 +13,7 @@ import { screens, defaultRoutes, normalizeText, routeForRole } from './navigatio
 import { pageCount, pagedList } from './listas';
 
 import { PurchaseDialog } from './components/PurchaseDialog';
+import { Circulation, circulationRoutes, WaitButton } from './components/Circulation';
 import { ChatAssistant } from './components/ChatAssistant';
 import { validateLines, findPurchase } from './purchases';
 import {
@@ -32,14 +33,6 @@ import {
 
 // Pantallas y ventanas de sprints posteriores: se muestran sin datos hasta que tengan su API.
 const LATER_SPRINTS: Record<string, [string, string]> = {
-  '7-439': ['Mi cuenta: préstamos y adeudos', 'Sprint 2'],
-  '7-1177': ['Registrar préstamo', 'Sprint 2'],
-  '162-2206': ['Registrar préstamo', 'Sprint 2'],
-  '174-3080': ['Registrar préstamo', 'Sprint 2'],
-  '182-571': ['Comprobante de préstamo', 'Sprint 2'],
-  '182-908': ['Devolución', 'Sprint 2'],
-  '207-712': ['Renovación', 'Sprint 2'],
-  '207-849': ['Multas y pagos', 'Sprint 3'],
   '207-1046': ['Alumnos suspendidos', 'Sprint 3'],
   '211-962': ['Registrar pago', 'Sprint 3'],
   '211-1005': ['Reportar libro perdido', 'Sprint 3'],
@@ -72,7 +65,7 @@ export default function App() {
   const [role, setRole] = useState(() => sessionStorage.getItem('ducky-role') || 'Alumno');
   const [route, setRoute] = useState(() => {
     const r = location.hash.slice(1);
-    return manifest.some((n) => n.module === r && !n.overlay)
+    return r === 'circulacion-espera' || manifest.some((n) => n.module === r && !n.overlay)
       ? routeForRole(r, sessionStorage.getItem('ducky-role') || 'Alumno')
       : '27-759';
   });
@@ -110,7 +103,7 @@ export default function App() {
   useEffect(() => {
     const onHash = () => {
       const r = location.hash.slice(1);
-      if (manifest.some((n) => n.module === r && !n.overlay)) {
+      if (r === 'circulacion-espera' || manifest.some((n) => n.module === r && !n.overlay)) {
         const next = routeForRole(r, sessionStorage.getItem('ducky-role') || 'Alumno');
         setRoute(next);
         if (next !== r) location.hash = next;
@@ -149,7 +142,7 @@ export default function App() {
     if (timer.current) clearTimeout(timer.current);
     timer.current = setTimeout(() => setToast(''), 5000);
   }
-  // Datos del Sprint 1 desde la API; préstamos y multas siguen con la demostración local.
+  // Cargar los datos compartidos de los módulos conectados a la API.
   async function refresh(permisos = session?.permisos || []) {
     try {
       const remote = await loadRemoteData(permisos);
@@ -335,7 +328,8 @@ export default function App() {
       devolucion: '182-908',
       renovacion: '207-712',
       renovaciones: '207-712',
-      'multas y pagos': '207-849',
+      'multas y tesoreria': '207-849',
+      'lista de espera': 'circulacion-espera',
       suspendidos: '207-1046',
       'gestion de libros': role === 'Administrador' ? '247-2861' : '247-3086',
       reportes: '207-1430',
@@ -366,7 +360,14 @@ export default function App() {
       return;
     }
     if (actionName.startsWith('operaciones')) {
-      setMenu(['Préstamos', 'Devolución', 'Renovación', 'Multas y pagos', 'Suspendidos']);
+      setMenu([
+        'Préstamos',
+        'Devolución',
+        'Renovación',
+        'Lista de espera',
+        'Multas y Tesorería',
+        'Suspendidos',
+      ]);
       return;
     }
     if (
@@ -884,7 +885,9 @@ export default function App() {
     const target = e.target as HTMLElement;
     if (
       !target.closest('.screen-canvas,.modal-window') ||
-      target.closest('input,select,textarea,.action,.modal-close')
+      target.closest(
+        'input,select,textarea,.action,.modal-close,[data-circulation],.chat-assistant',
+      )
     )
       return;
     const control = target.closest<HTMLElement>(
@@ -961,7 +964,26 @@ export default function App() {
                 </button>
               </form>
             )}
-            {LATER_SPRINTS[route] ? <LaterSprint id={route} /> : <Screen />}
+            {circulationRoutes[route] ? (
+              circulationRoutes[route] === 'account' ||
+              session?.permisos.includes('OPERAR_CIRCULACION') ? (
+                <Circulation
+                  mode={circulationRoutes[route]}
+                  onChanged={() => {
+                    void refresh();
+                  }}
+                />
+              ) : (
+                <p className="purchase-dialog">Esta operación requiere permiso de circulación.</p>
+              )
+            ) : LATER_SPRINTS[route] ? (
+              <LaterSprint id={route} />
+            ) : (
+              <Screen />
+            )}
+            {route === '6-26' && book.id && ['Alumno', 'Maestro', 'Colaborador'].includes(role) && (
+              <WaitButton key={book.id} book={book.id} />
+            )}
             {route === '371-1836' && (
               <section className="purchase-dialog" aria-label="Perfiles registrados">
                 <h3>Perfiles registrados</h3>
