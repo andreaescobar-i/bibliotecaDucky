@@ -168,7 +168,78 @@ de préstamos es del Sprint 2 y los datos son de prueba. Agregarlo después es u
 con una regla estricta: el id del usuario lo pone el backend desde la sesión, **nunca** lo decide
 Gemini (pregunta abierta 2).
 
-## Dudas sobre dónde realizar tareas
+## Roles y permisos, comprobados en la aplicación
+
+Esta sección sustituye a la propuesta original de "dónde realizar tareas" que sigue más abajo.
+Por decisión del proyecto la guía es **general**: el asistente identifica quién le habla y qué
+puede o no puede hacer, sin dar pasos ni nombres de botones.
+
+### Cómo se comprobó (15 de noviembre de 2026)
+
+1. Se abrió la aplicación en un navegador con una cuenta de cada perfil y se recorrió cada
+   opción de su menú.
+2. Con cada cuenta se intentó entrar, escribiendo la dirección, a pantallas de otros roles.
+3. Con cada cuenta se envió a la API una petición por operación, vacía o sobre un registro
+   inexistente, para ver si respondía "sin permiso". Ninguna modificó datos.
+
+### Menú que muestra la aplicación a cada rol
+
+| Rol                          | Secciones                                               | Aún no habilitado                      |
+| ---------------------------- | ------------------------------------------------------- | -------------------------------------- |
+| Alumno, Maestro, Colaborador | Catálogo, Mi cuenta                                     | Mi cuenta (Sprint 2)                   |
+| Bibliotecario                | Catálogo, Libros, Operaciones                           | Todo Operaciones (Sprints 2 y 3)       |
+| Administrador                | Reportes, Usuarios, Libros, Administración, Operaciones | Reportes (Sprint 5) y todo Operaciones |
+| Comprador de libros          | Compras                                                 | Nada                                   |
+
+Al intentar entrar a una pantalla de otro rol, la aplicación regresa a la pantalla inicial del
+rol propio.
+
+### Qué permite la API a cada perfil
+
+| Operación                                                 | Alumno, Maestro, Colaborador | Bibliotecario de ventanilla | Bibliotecario de consulta | Comprador | Administrador |
+| --------------------------------------------------------- | ---------------------------- | --------------------------- | ------------------------- | --------- | ------------- |
+| Consultar libros, ubicación y listado                     | Sí                           | Sí                          | Sí                        | Sí        | Sí            |
+| Alta, cambio y baja de libros y ejemplares                | No                           | Sí                          | No                        | No        | Sí            |
+| Historial y etiquetas de libros                           | No                           | Sí                          | No                        | No        | Sí            |
+| Cuentas de usuario (consulta, alta, cambio, baja, perfil) | No                           | No                          | No                        | No        | Sí            |
+| Perfiles (consulta, alta, cambio, desactivar)             | No                           | No                          | No                        | No        | Sí            |
+| Compras (solicitudes y recepciones)                       | No                           | No                          | No                        | Sí        | Sí            |
+| Usar el asistente                                         | Sí                           | Sí                          | Sí                        | Sí        | Sí            |
+
+Coincide exactamente con los permisos guardados en la base (`perfil_permiso`).
+
+### Lo que se descubrió al abrir la app
+
+- **El menú depende del rol; el permiso real, del perfil.** La cuenta "Bibliotecario de
+  consulta" ve los mismos botones de agregar y editar libros que el Bibliotecario de ventanilla,
+  pero la API le rechaza esas operaciones. Por eso la guía se arma con los permisos del perfil y
+  no con el nombre del rol.
+- **El Comprador de libros no tiene catálogo en su menú**, aunque su perfil sí puede consultar
+  libros. El asistente le ofrece consultarlos por él.
+- **El Administrador gestiona las compras en "Solicitudes de libros"** (dentro de
+  Administración), no en la pantalla Compras.
+- **Posible error del front, por confirmar a mano:** al pulsar "Historial" en Gestión de libros,
+  la aplicación pidió `/api/libros//historial`, sin la clave del libro. Ocurrió con clics
+  automatizados y con dos cuentas distintas.
+
+### Cómo lo usa el asistente
+
+`servicios/chat/guiaApp.js` arma, para cada pregunta, un texto con: nombre, rol y perfil de quien
+pregunta; las secciones de su menú; lo que sus permisos sí le permiten; lo que no; y las
+funciones de su menú que aún no están habilitadas. El asistente responde con eso.
+
+Para que la guía no quede desactualizada sin que nadie lo note, hay tres pruebas automáticas:
+
+| Prueba                                | Qué compara                                                           |
+| ------------------------------------- | --------------------------------------------------------------------- |
+| `tests/integracion/chatGuia.test.mjs` | Lo que la guía dice de cada perfil contra lo que la API le permite    |
+| `tests/chatGuia.test.mjs` (permisos)  | Los permisos de la guía contra los de la base                         |
+| `tests/chatGuia.test.mjs` (front)     | El menú por rol y las pantallas pendientes contra el código del front |
+
+Si el equipo cambia el menú o habilita una pantalla pendiente, la prueba falla e indica qué
+actualizar en la guía.
+
+## Dudas sobre dónde realizar tareas (propuesta original)
 
 ### De dónde saldrá la información
 
