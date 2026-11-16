@@ -20,6 +20,7 @@ import ubicacionRutas from './ubicacionRutas.js';
 import solicitudRutas from './solicitudRutas.js';
 import chatRutas from './chatRutas.js';
 import circulacionRutas from './circulacionRutas.js';
+import gestionBibliotecaRutas from './gestionBibliotecaRutas.js';
 
 const router = express.Router();
 
@@ -39,5 +40,6 @@ router.use('/ubicaciones', ubicacionRutas);
 router.use('/solicitudes', solicitudRutas);
 router.use('/chat', chatRutas);
 router.use('/circulacion', circulacionRutas);
+router.use('/gestion-biblioteca', gestionBibliotecaRutas);
 
 export default router;

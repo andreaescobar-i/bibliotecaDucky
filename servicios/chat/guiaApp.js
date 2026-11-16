@@ -13,9 +13,7 @@
  *   - Los demás roles: los perfiles activos de la base con sus permisos (se leen en cada
  *     pregunta), así que un perfil nuevo o modificado se refleja sin tocar este archivo.
  *   - Secciones por rol: el menú que muestra el front (src/components/SessionNavigation.tsx).
- *   - Funciones pendientes: las pantallas que muestran "se entrega en el Sprint N"
- *     (LATER_SPRINTS en src/App.tsx).
- * Si cambia cualquiera de los tres, las pruebas de la guía fallan y hay que actualizarla.
+ * Las pruebas comprueban que los permisos y menús coincidan con la plataforma.
  */
 
 // Acciones del sistema. Cada una se puede hacer si el perfil tiene TODOS los permisos de
@@ -24,8 +22,13 @@ const ACCIONES = Object.freeze([
   {
     clave: 'OPERAR_CIRCULACION',
     descripcion:
-      'Registrar préstamos y boletas, renovaciones, devoluciones, inscripciones en lista de espera y remitir multas con Tesorería simulada',
+      'Registrar préstamos, renovaciones, devoluciones, listas de espera, pagos, reposiciones, suspensiones y cortes para Servicios Escolares',
     todos: ['OPERAR_CIRCULACION'],
+  },
+  {
+    clave: 'CONSULTAR_REPORTES',
+    descripcion: 'Consultar y exportar reportes de inventario y préstamos vencidos',
+    todos: ['CONSULTAR_REPORTES'],
   },
   {
     clave: 'CONSULTAR_CATALOGO',
@@ -138,7 +141,7 @@ const SECCIONES_LECTOR = Object.freeze([
 const OPERACIONES = Object.freeze({
   nombre: 'Operaciones',
   contenido:
-    'préstamos y boletas, devolución, renovación, lista de espera y multas; pagos y suspendidos siguen pendientes',
+    'préstamos y boletas, devolución, renovación, lista de espera, multas, reposiciones, pagos y suspensiones',
 });
 const SECCIONES_POR_ROL = Object.freeze({
   Alumno: SECCIONES_LECTOR,
@@ -150,7 +153,7 @@ const SECCIONES_POR_ROL = Object.freeze({
     OPERACIONES,
   ],
   Administrador: [
-    { nombre: 'Reportes', contenido: 'reportes e inventario; aún no habilitada' },
+    { nombre: 'Reportes', contenido: 'inventario, préstamos vencidos y exportación' },
     { nombre: 'Usuarios', contenido: 'gestión de las cuentas de usuario' },
     { nombre: 'Libros', contenido: 'el catálogo, la gestión de catálogo y la gestión de libros' },
     { nombre: 'Administración', contenido: 'usuarios, perfiles y solicitudes de libros' },
@@ -171,14 +174,6 @@ const NOTAS_POR_ROL = Object.freeze({
   Administrador:
     'Las compras de libros las consulta y gestiona en "Solicitudes de libros", dentro de Administración.',
 });
-
-// Funciones que la aplicación muestra pero aún no están habilitadas, con el sprint en que se
-// entregan y los roles que las ven en su menú
-const ROLES_OPERACION = ['Bibliotecario', 'Administrador'];
-const FUNCIONES_PENDIENTES = Object.freeze([
-  { nombre: 'Alumnos suspendidos', sprint: 'Sprint 3', roles: ROLES_OPERACION },
-  { nombre: 'Reportes e inventario', sprint: 'Sprint 5', roles: ['Administrador'] },
-]);
 
 /**
  * Objetivo: Saber si un perfil puede realizar una acción con los permisos que tiene.
@@ -266,7 +261,6 @@ function crearGuia(usuario, perfiles = []) {
   const rol = usuario.rol_nombre;
   const { permitidas, noPermitidas } = clasificarAcciones(usuario.permisos ?? []);
   const secciones = SECCIONES_POR_ROL[rol] ?? [];
-  const pendientes = FUNCIONES_PENDIENTES.filter((funcion) => funcion.roles.includes(rol));
 
   return `QUIÉN PREGUNTA
 - Nombre: ${usuario.primer_nombre}. Rol: ${rol}. Perfil: ${usuario.perfil_nombre}.
@@ -288,12 +282,8 @@ ${listar(
   'No hay acciones restringidas para este perfil.',
 )}
 
-FUNCIONES QUE SU MENÚ MUESTRA PERO AÚN NO ESTÁN HABILITADAS EN EL SISTEMA
-${listar(
-  pendientes.map((funcion) => `${funcion.nombre} (se entrega en el ${funcion.sprint})`),
-  'Ninguna.',
-)}
-- Las operaciones de circulación y la consulta de multas ya están disponibles con el permiso correspondiente. El envío a Tesorería es simulado; el registro de pagos y los reportes siguen pendientes.
+AVISOS INSTITUCIONALES
+- Los avisos usan los canales configurados. Cuando un canal está en modo de prueba, su acuse no corresponde a un envío real. No prometas que un aviso se entregó ni que una suspensión escolar está aplicada fuera de la biblioteca.
 
 LO QUE PUEDEN HACER LOS DEMÁS ROLES Y PERFILES (de forma general, según los perfiles activos)
 ${listar(
@@ -306,7 +296,7 @@ CÓMO USAR ESTA INFORMACIÓN
 - Si pregunta por una acción de la lista "sí puede", confirma que su perfil lo permite e indica en qué sección del menú se encuentra de forma general. No des pasos detallados ni nombres de botones.
 - Si pregunta por una acción de la lista "no puede", dile con claridad que su perfil no tiene ese permiso. Las cuentas y los perfiles los gestiona el Administrador; el alta, cambio y baja de libros corresponden a perfiles de Bibliotecario o Administrador; las compras, a perfiles de Comprador de libros o Administrador.
 - Lo que una persona puede hacer lo decide el permiso de su perfil, no su menú: si la aplicación le muestra una opción que su perfil no permite, el sistema rechazará la operación. Quien puede cambiar un perfil es el Administrador.
-- Si pregunta por una función aún no habilitada, dile que todavía no está disponible en el sistema y en qué sprint se entrega. Sus préstamos y adeudos sí puedes consultarlos tú con la herramienta de su cuenta.
+- Sus préstamos y adeudos puedes consultarlos con la herramienta de su cuenta.
 - Si pregunta qué puede hacer otro rol o perfil (por ejemplo "¿y un alumno?" o "¿qué hace el bibliotecario?"), responde de forma general con la lista de los demás roles y perfiles; si ese rol tiene más de un perfil, acláralo. Nunca digas qué personas tienen ese rol ni des datos de sus cuentas.
 - Si pregunta por una acción o un rol que no aparece en ninguna lista, responde que no cuentas con esa información.`;
 }
@@ -314,7 +304,6 @@ CÓMO USAR ESTA INFORMACIÓN
 export {
   ACCIONES,
   SECCIONES_POR_ROL,
-  FUNCIONES_PENDIENTES,
   puedeRealizar,
   clasificarAcciones,
   resumirOtrosPerfiles,

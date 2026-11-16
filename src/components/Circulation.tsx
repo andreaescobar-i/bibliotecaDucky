@@ -23,6 +23,7 @@ type Fine = {
   folio: string;
   estado: string;
   acuse_tesoreria?: string;
+  modo_envio_tesoreria?: string;
 };
 type Account = {
   prestamos: Loan[];
@@ -42,7 +43,6 @@ const titles = {
   loan: 'Registrar préstamo',
   renew: 'Renovar préstamo',
   return: 'Registrar devolución',
-  fine: 'Multas y Tesorería',
   account: 'Mi cuenta',
   queue: 'Lista de espera',
   receipt: 'Boleta de préstamo',
@@ -56,7 +56,6 @@ export const circulationRoutes: Record<string, CirculationMode> = {
   '182-571': 'receipt',
   '182-908': 'return',
   '207-712': 'renew',
-  '207-849': 'fine',
   'circulacion-espera': 'queue',
 };
 
@@ -166,28 +165,18 @@ function Receipt({ loan }: { loan: Loan }) {
 
 export function Circulation({ mode, onChanged }: { mode: CirculationMode; onChanged: () => void }) {
   const [loan, setLoan] = useState<Loan | null>(null);
-  const [fines, setFines] = useState<Fine[]>([]);
   const [account, setAccount] = useState<Account | null>(null);
   const [folio, setFolio] = useState('');
-  const [ready, setReady] = useState(false);
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState('');
   const [error, setError] = useState('');
   const [loadVersion, setLoadVersion] = useState(0);
   useEffect(() => {
     let active = true;
-    if (mode !== 'account' && mode !== 'fine') return;
-    const load =
-      mode === 'account'
-        ? request<Account>(endpoint + '/mi-cuenta').then((data) => {
-            if (active) setAccount(data);
-          })
-        : request<Fine[]>(endpoint + '/multas').then((data) => {
-            if (active) setFines(data);
-          });
-    load
-      .then(() => {
-        if (active) setReady(true);
+    if (mode !== 'account') return;
+    request<Account>(endpoint + '/mi-cuenta')
+      .then((data) => {
+        if (active) setAccount(data);
       })
       .catch((e) => {
         if (active) setError(message(e));
@@ -312,7 +301,7 @@ export function Circulation({ mode, onChanged }: { mode: CirculationMode; onChan
                           (fine
                             ? `Multa de ${mxn(fine.monto_mxn)}. ` +
                               (result.aviso ||
-                                `Envío simulado a Tesorería: ${fine.acuse_tesoreria}.`)
+                                `Envío ${fine.modo_envio_tesoreria === 'REAL' ? 'confirmado' : 'simulado'} a Tesorería: ${fine.acuse_tesoreria}.`)
                             : 'Sin multa por retraso.') +
                           (result.hayEspera
                             ? ' Este libro tiene usuarios en lista de espera.'
@@ -346,7 +335,11 @@ export function Circulation({ mode, onChanged }: { mode: CirculationMode; onChan
                 </button>
               </form>
             ) : (
-              <p>Préstamo devuelto.</p>
+              <p>
+                {loan.estado === 'PERDIDO'
+                  ? 'Préstamo cerrado por extravío.'
+                  : 'Préstamo devuelto.'}
+              </p>
             )}
             {mode === 'renew' && loan.estado === 'ACTIVO' && <Receipt loan={loan} />}
           </>
@@ -379,49 +372,6 @@ export function Circulation({ mode, onChanged }: { mode: CirculationMode; onChan
           </button>
         </form>
       )}
-      {mode === 'fine' && (
-        <>
-          <p>
-            Consulta multas por devolución tardía. El envío a Tesorería se simula y conserva un
-            acuse de prueba.
-          </p>
-          <form
-            onSubmit={(e) =>
-              submit(e, async () => {
-                setFines(
-                  await request<Fine[]>(
-                    endpoint + '/multas?folio=' + encodeURIComponent(folio.trim()),
-                  ),
-                );
-                setReady(true);
-              })
-            }
-          >
-            <label>
-              Folio de préstamo (opcional){' '}
-              <input maxLength={64} value={folio} onChange={(e) => setFolio(e.target.value)} />
-            </label>
-            <button className="action" disabled={busy}>
-              Consultar multas
-            </button>
-          </form>
-          {ready && (
-            <FineList
-              fines={fines}
-              send={(id) =>
-                void run(async () => {
-                  const f = await request<Fine>(endpoint + '/multas/' + id + '/envio', 'POST', {});
-                  setFines((all) =>
-                    all.map((item) => (item.adeudo_id === id ? { ...item, ...f } : item)),
-                  );
-                  setStatus('Acuse de envío simulado: ' + f.acuse_tesoreria);
-                })
-              }
-              busy={busy}
-            />
-          )}
-        </>
-      )}
       {mode === 'account' && (
         <>
           {!account && !error && <p>Cargando cuenta…</p>}
@@ -436,9 +386,51 @@ export function Circulation({ mode, onChanged }: { mode: CirculationMode; onChan
                         ? new Date(p.fecha_vencimiento) < new Date()
                           ? 'Vencido'
                           : 'Activo'
-                        : 'Devuelto'}
+                        : p.estado === 'PERDIDO'
+                          ? 'Extraviado'
+                          : 'Devuelto'}
                     </h3>
                     <LoanSummary loan={p} />
+                    {p.estado === 'ACTIVO' && new Date(p.fecha_vencimiento) >= new Date() && (
+                      <button
+                        className="action"
+                        type="button"
+                        disabled={busy}
+                        onClick={() =>
+                          void run(async () => {
+                            const renewed = await request<
+                              Pick<Loan, 'folio' | 'fecha_vencimiento'>
+                            >(
+                              endpoint +
+                                '/mi-cuenta/prestamos/' +
+                                encodeURIComponent(p.folio) +
+                                '/renovacion',
+                              'POST',
+                              {},
+                            );
+                            setAccount((old) =>
+                              old
+                                ? {
+                                    ...old,
+                                    prestamos: old.prestamos.map((loan) =>
+                                      loan.folio === renewed.folio
+                                        ? { ...loan, fecha_vencimiento: renewed.fecha_vencimiento }
+                                        : loan,
+                                    ),
+                                  }
+                                : old,
+                            );
+                            setStatus(
+                              'Renovación registrada. Vence el ' +
+                                fmt(renewed.fecha_vencimiento) +
+                                '.',
+                            );
+                          })
+                        }
+                      >
+                        Solicitar renovación
+                      </button>
+                    )}
                   </article>
                 ))
               ) : (
@@ -490,15 +482,7 @@ export function Circulation({ mode, onChanged }: { mode: CirculationMode; onChan
   );
 }
 
-function FineList({
-  fines,
-  send,
-  busy,
-}: {
-  fines: Fine[];
-  send?: (id: string) => void;
-  busy?: boolean;
-}) {
+function FineList({ fines }: { fines: Fine[] }) {
   return fines.length ? (
     <ul className="circ-list">
       {fines.map((f) => (
@@ -510,19 +494,15 @@ function FineList({
             {f.titulo} · {f.folio}
           </span>
           <span>
-            {f.estado === 'PENDIENTE' ? 'Pago pendiente' : f.estado}
-            {f.acuse_tesoreria ? ` · Acuse simulado: ${f.acuse_tesoreria}` : ''}
+            {f.estado === 'PENDIENTE'
+              ? 'Pago pendiente'
+              : f.estado === 'PAGADO'
+                ? 'Pagado'
+                : f.estado}
+            {f.acuse_tesoreria
+              ? ` · Acuse ${f.modo_envio_tesoreria === 'REAL' ? 'confirmado' : 'simulado'}: ${f.acuse_tesoreria}`
+              : ''}
           </span>
-          {send && !f.acuse_tesoreria && f.estado === 'PENDIENTE' && (
-            <button
-              type="button"
-              className="action"
-              disabled={busy}
-              onClick={() => send(f.adeudo_id)}
-            >
-              Remitir a Tesorería
-            </button>
-          )}
         </li>
       ))}
     </ul>

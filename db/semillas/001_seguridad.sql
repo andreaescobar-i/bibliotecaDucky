@@ -41,7 +41,8 @@ INSERT INTO permiso (clave, nombre, modulo, descripcion) VALUES
     ('CONSULTAR_LISTADO',     'Consultar listado de libros', 'CONSULTA', 'Listado filtrado, PDF e impresión'),
     ('GESTIONAR_SOLICITUDES', 'Gestionar solicitudes de compra', 'COMPRAS', 'Preparar y enviar solicitudes a Tesorería'),
     ('REGISTRAR_RECEPCIONES', 'Registrar recepciones',       'COMPRAS',  'Registrar entregas recibidas'),
-    ('OPERAR_CIRCULACION', 'Operar circulación', 'CIRCULACION', 'Registrar préstamos, renovaciones, devoluciones y remitir multas')
+    ('OPERAR_CIRCULACION', 'Operar circulación', 'CIRCULACION', 'Registrar préstamos, renovaciones, devoluciones y remitir multas'),
+    ('CONSULTAR_REPORTES', 'Consultar reportes', 'REPORTES', 'Consultar y exportar reportes de inventario y circulación')
 ON CONFLICT (clave) DO NOTHING;
 
 -- El permiso OPERAR_CIRCULACION se crea en la migración 004.

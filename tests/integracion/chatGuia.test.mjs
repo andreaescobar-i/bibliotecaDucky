@@ -22,6 +22,8 @@ const SIN_PERMISO = 403;
 // Una petición por acción de la guía. Van vacías o sobre registros inexistentes: si la cuenta
 // tiene permiso la API responde 200, 400 o 404; si no lo tiene, 403. Ninguna cambia datos.
 const SONDAS = Object.freeze({
+  OPERAR_CIRCULACION: ['get', '/api/gestion-biblioteca/suspendidos'],
+  CONSULTAR_REPORTES: ['get', '/api/gestion-biblioteca/inventario?periodo=2026-10'],
   CONSULTAR_CATALOGO: ['get', '/api/libros'],
   CONSULTAR_UBICACION: ['get', '/api/ubicaciones?titulo=Pedro'],
   CONSULTAR_LISTADO: ['get', '/api/listado-libros'],

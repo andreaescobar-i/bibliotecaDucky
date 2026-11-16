@@ -439,7 +439,7 @@ async function postEnvio(req, res, next) {
 }
 
 /**
- * Objetivo: Registrar la respuesta de Tesorería (simulada) a una solicitud enviada: autorizar o
+ * Objetivo: Registrar una respuesta de Tesorería a una solicitud enviada: autorizar o
  *   rechazar. Corresponde a los botones "Autorizar" y "Rechazar" del front.
  * @param {Object} req - Petición HTTP. Cuerpo: decision ("Autorizar" o "Rechazar").
  * @param {Object} res - Respuesta HTTP.
@@ -448,6 +448,16 @@ async function postEnvio(req, res, next) {
  */
 async function postAutorizacion(req, res, next) {
   try {
+    const referencia = limpiarTexto(req.body?.referencia);
+    if (
+      (process.env.TESORERIA_WEBHOOK_URL || process.env.NODE_ENV === 'production') &&
+      !referencia
+    ) {
+      throw new ErrorAplicacion(400, 'Captura el folio de la resolución emitida por Tesorería.');
+    }
+    if (referencia.length > 100) {
+      throw new ErrorAplicacion(400, 'El folio de la resolución admite hasta 100 caracteres.');
+    }
     const decision = normalizarComparacion(limpiarTexto(req.body?.decision));
     const ESTADO_POR_DECISION = { AUTORIZAR: 'AUTORIZADO', RECHAZAR: 'RECHAZADO' };
     const estadoNuevo = ESTADO_POR_DECISION[decision];
@@ -459,7 +469,8 @@ async function postAutorizacion(req, res, next) {
     const folio = await ejecutarTransaccion(async (cliente) => {
       const solicitud = await obtenerSolicitudDeRuta(req, cliente);
       await solicitudModelo.bloquearSolicitud(cliente, solicitud.solicitud_adquisicion_id);
-      if (solicitud.estado !== 'EN_TESORERIA') {
+      const vigente = await obtenerSolicitudDeRuta(req, cliente);
+      if (vigente.estado !== 'EN_TESORERIA') {
         throw new ErrorAplicacion(409, 'Solo se resuelven solicitudes que están en Tesorería');
       }
       await solicitudModelo.actualizarEstado(
@@ -476,7 +487,7 @@ async function postAutorizacion(req, res, next) {
           accion: 'RESOLUCION_TESORERIA',
           entidad: 'solicitud',
           claveRegistro: solicitud.folio,
-          detalle: { decision: estadoNuevo, simulada: true },
+          detalle: { decision: estadoNuevo, simulada: !referencia, referencia: referencia || null },
           ip: req.ip,
         },
         cliente,

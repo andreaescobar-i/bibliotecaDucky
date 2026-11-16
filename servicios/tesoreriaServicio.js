@@ -7,13 +7,22 @@
  * Fecha: 27 de Octubre de 2026
  */
 
+import { entregarAviso } from './avisoInstitucional.js';
+
 /**
  * Objetivo: Transporte simulado: Tesorería confirma la recepción con un acuse.
  * @param {{ folio: string }} solicitud - Solicitud remitida.
  * @returns {Promise<{ confirmado: boolean, acuse: string }>} Confirmación de Tesorería.
  */
 async function transporteSimulado(solicitud) {
-  return { confirmado: true, acuse: `TES-${solicitud.folio}` };
+  if (process.env.TESORERIA_WEBHOOK_URL) {
+    return entregarAviso(
+      process.env.TESORERIA_WEBHOOK_URL,
+      process.env.TESORERIA_WEBHOOK_TOKEN,
+      solicitud,
+    );
+  }
+  return { confirmado: true, acuse: `TES-${solicitud.folio}`, modo: 'SIMULADO' };
 }
 
 let transporteActual = transporteSimulado; // Se reemplaza en pruebas para simular fallas
@@ -37,7 +46,11 @@ function establecerTransporte(transporte) {
 async function enviarSolicitud(solicitud) {
   try {
     const respuesta = await transporteActual(solicitud);
-    return { confirmado: Boolean(respuesta?.confirmado), acuse: respuesta?.acuse ?? null };
+    return {
+      confirmado: Boolean(respuesta?.confirmado),
+      acuse: respuesta?.acuse ?? null,
+      ...(respuesta?.modo ? { modo: respuesta.modo } : {}),
+    };
   } catch {
     return { confirmado: false, acuse: null };
   }

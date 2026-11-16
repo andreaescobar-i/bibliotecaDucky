@@ -217,8 +217,8 @@ export const api = {
   removeCopy: (id: string, body: object) => request(`/ejemplares/${path(id)}/baja`, 'POST', body),
   createPurchase: (body: object) => request('/solicitudes', 'POST', body),
   sendPurchase: (id: string) => request(`/solicitudes/${path(id)}/envio`, 'POST'),
-  resolvePurchase: (id: string, decision: 'Autorizar' | 'Rechazar') =>
-    request(`/solicitudes/${path(id)}/autorizacion`, 'POST', { decision }),
+  resolvePurchase: (id: string, decision: 'Autorizar' | 'Rechazar', referencia: string) =>
+    request(`/solicitudes/${path(id)}/autorizacion`, 'POST', { decision, referencia }),
   receivePurchase: (id: string, body: object) =>
     request(`/solicitudes/${path(id)}/recepciones`, 'POST', body),
   deliverPurchase: (id: string) => request(`/solicitudes/${path(id)}/entrega-catalogo`, 'POST'),

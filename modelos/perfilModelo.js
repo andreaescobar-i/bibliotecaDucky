@@ -147,7 +147,16 @@ async function crearPerfil(cliente, { clave, nombre, descripcion, rolId, creadoP
  */
 async function reemplazarRolYPermisos(cliente, perfilId, rolId, permisoIds) {
   await cliente.query('DELETE FROM perfil_permiso WHERE perfil_id = $1', [perfilId]);
-  await cliente.query('UPDATE perfil SET rol_id = $2 WHERE perfil_id = $1', [perfilId, rolId]);
+  await cliente.query(
+    `UPDATE perfil pf SET rol_id=$2,
+    politica_prestamo_id=CASE
+      WHEN pf.rol_id=$2 AND pf.politica_prestamo_id IS NOT NULL THEN pf.politica_prestamo_id
+      ELSE (SELECT pp.politica_prestamo_id FROM politica_prestamo pp JOIN rol r ON r.rol_id=$2
+        WHERE pp.nombre=CASE WHEN r.nombre='Maestro' THEN 'Maestros' WHEN r.nombre IN ('Alumno','Colaborador') THEN 'Alumnos' END
+          AND pp.activo AND pp.vigente_desde<=CURRENT_DATE ORDER BY pp.vigente_desde DESC,pp.version DESC LIMIT 1)
+    END WHERE pf.perfil_id=$1`,
+    [perfilId, rolId],
+  );
   await cliente.query(
     `INSERT INTO perfil_permiso (perfil_id, rol_id, permiso_id)
      SELECT $1, $2, UNNEST($3::BIGINT[])`,

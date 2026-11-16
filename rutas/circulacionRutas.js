@@ -27,6 +27,14 @@ router.use(requiereSesion);
 router.get('/mi-cuenta', consultar, async (req, res) => {
   res.json(await circulacion.miCuenta(req.usuario.usuario_id));
 });
+router.post('/mi-cuenta/prestamos/:folio/renovacion', consultar, async (req, res) => {
+  const prestamo = await circulacion.renovar(
+    campo(req.params.folio, 'Folio').toUpperCase(),
+    req.usuario.usuario_id,
+    true,
+  );
+  res.json({ folio: prestamo.folio, fecha_vencimiento: prestamo.fecha_vencimiento });
+});
 router.post('/mi-espera', consultar, async (req, res) => {
   res
     .status(201)

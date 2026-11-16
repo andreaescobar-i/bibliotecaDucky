@@ -6,7 +6,7 @@ const GUIA = new Map([
   ],
   [
     'que incluye el sistema',
-    'El sistema abarca el catálogo y los ejemplares, usuarios y permisos, préstamos y boletas, renovaciones, lista de espera, devoluciones, multas por atraso y adquisiciones. Las funciones dependen de su perfil. El envío de multas a Tesorería es simulado.',
+    'El sistema abarca el catálogo y los ejemplares, usuarios y permisos, préstamos y boletas, renovaciones, lista de espera, devoluciones, multas por atraso, reposiciones, comprobantes de pago, suspensiones, reportes de inventario y adquisiciones. Las funciones dependen de su perfil. Los avisos sin canal institucional configurado son de prueba.',
   ],
   [
     'en que plataforma puedo usarlo',

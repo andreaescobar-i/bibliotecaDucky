@@ -50,7 +50,7 @@ after(() => DbPool.end());
 describe('Semillas cargadas', () => {
   const TOTALES_ESPERADOS = [
     ['rol', 6],
-    ['permiso', 20],
+    ['permiso', 21],
     ['perfil', 8],
     ['usuario', 12],
     ['libro', 8],
@@ -98,7 +98,7 @@ describe('Semillas cargadas', () => {
 
 describe('Matriz de permisos (HUPRF01)', () => {
   const PERMISOS_POR_PERFIL = [
-    ['PRF-ADM', 20],
+    ['PRF-ADM', 21],
     ['PRF-BIB', 9],
     ['PRF-BIB-CON', 3],
     ['PRF-COM', 5],

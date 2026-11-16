@@ -122,6 +122,68 @@ const RUTAS_DISPONIBLES = [
     ruta: '/circulacion/multas/:id/envio',
     descripcion: 'Remitir multa a Tesorería',
   },
+  { metodo: 'POST', ruta: '/auth/recuperacion', descripcion: 'Solicitar enlace de recuperación' },
+  {
+    metodo: 'POST',
+    ruta: '/auth/recuperacion/confirmar',
+    descripcion: 'Restablecer contraseña con enlace válido',
+  },
+  {
+    metodo: 'POST',
+    ruta: '/circulacion/mi-cuenta/prestamos/:folio/renovacion',
+    descripcion: 'Renovar préstamo propio',
+  },
+  {
+    metodo: 'GET',
+    ruta: '/gestion-biblioteca/adeudos',
+    descripcion: 'Buscar multas, reposiciones y pagos',
+  },
+  {
+    metodo: 'POST',
+    ruta: '/gestion-biblioteca/adeudos/:id/pago',
+    descripcion: 'Registrar comprobante de pago',
+  },
+  {
+    metodo: 'POST',
+    ruta: '/gestion-biblioteca/perdidas',
+    descripcion: 'Reportar extravío y generar reposición',
+  },
+  {
+    metodo: 'POST',
+    ruta: '/gestion-biblioteca/adeudos/:id/tesoreria',
+    descripcion: 'Remitir adeudo a Tesorería',
+  },
+  {
+    metodo: 'POST',
+    ruta: '/gestion-biblioteca/adeudos/:id/escolares',
+    descripcion: 'Notificar reposición a Servicios Escolares',
+  },
+  {
+    metodo: 'GET',
+    ruta: '/gestion-biblioteca/suspendidos',
+    descripcion: 'Consultar deudores y suspensiones vigentes',
+  },
+  {
+    metodo: 'POST',
+    ruta: '/gestion-biblioteca/suspendidos',
+    descripcion: 'Registrar o levantar suspensión',
+  },
+  {
+    metodo: 'GET',
+    ruta: '/gestion-biblioteca/cortes',
+    descripcion: 'Consultar el último corte de deudores',
+  },
+  { metodo: 'POST', ruta: '/gestion-biblioteca/cortes', descripcion: 'Guardar corte de deudores' },
+  {
+    metodo: 'POST',
+    ruta: '/gestion-biblioteca/cortes/:id/aviso',
+    descripcion: 'Notificar corte a Servicios Escolares',
+  },
+  {
+    metodo: 'GET',
+    ruta: '/gestion-biblioteca/inventario',
+    descripcion: 'Reporte de inventario y circulación',
+  },
   { metodo: 'POST', ruta: '/chat/mensajes', descripcion: 'Preguntar al asistente Ducky' },
   { metodo: 'GET', ruta: '/chat/conversacion', descripcion: 'Conversación abierta con Ducky' },
   { metodo: 'POST', ruta: '/chat/reinicio', descripcion: 'Reiniciar la conversación con Ducky' },

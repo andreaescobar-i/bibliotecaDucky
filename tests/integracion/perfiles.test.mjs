@@ -66,7 +66,9 @@ describe('HUPRF01: consulta de perfiles y roles', () => {
 
     assert.equal(respuesta.body.roles.length, 6);
     assert.equal(alumno.permisosPermitidos.length, 3);
-    assert.equal(administrador.permisosPermitidos.length, 19);
+    assert.ok(administrador.permisosPermitidos.some((p) => p.clave === 'CONSULTAR_REPORTES'));
+    assert.ok(administrador.permisosPermitidos.some((p) => p.clave === 'OPERAR_CIRCULACION'));
+    assert.equal(administrador.permisosPermitidos.length, 21);
   });
 
   test('un perfil inexistente responde 404', async () => {

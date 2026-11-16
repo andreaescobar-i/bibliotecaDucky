@@ -10,4 +10,6 @@ import './base.css';
 import './design.css';
 import './app.css';
 import App from './App';
-createRoot(document.getElementById('root')!).render(<App />);
+import { Recovery } from './components/Recovery';
+const token = /^#recuperar\/([A-Za-z0-9_-]+)$/.exec(location.hash)?.[1];
+createRoot(document.getElementById('root')!).render(token ? <Recovery token={token} /> : <App />);

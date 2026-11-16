@@ -41,7 +41,7 @@ Los seis roles son Alumno, Maestro, Colaborador, Bibliotecario, Administrador y 
   historial); solicitudes de compra, presupuesto, recepciones y entrega al catálogo.
 - **Circulación (Sprints 2 y 3):** préstamos, boletas, renovaciones, lista de espera,
   devoluciones, multas por atraso y consulta de préstamos y adeudos en Mi cuenta.
-- **Pendiente:** registro de pagos, suspendidos y reportes.
+- **Gestión:** registro de comprobantes de pago, reposiciones, suspensiones, cortes de deudores y reportes de inventario y circulación con exportación CSV.
 - **Asistente Ducky:** conectado a la API (`/api/chat`): responde con datos reales del catálogo y
   de la cuenta, según los permisos de quien pregunta. Su ventana es un diseño provisional.
 
@@ -435,25 +435,43 @@ así la cookie de sesión funciona sin configurar CORS en el navegador.
 - **Cuentas nuevas:** al entrar con la contraseña temporal aparece un formulario para cambiarla.
 - **Circulación:** las pantallas de Operaciones y Mi cuenta consumen `/api/circulacion`.
   El permiso `OPERAR_CIRCULACION` autoriza la operación de ventanilla.
-- **Pendiente:** registro de pagos, suspendidos y reportes.
+- **Gestión:** registro de comprobantes de pago, reposiciones, suspensiones, cortes de deudores y reportes de inventario y circulación con exportación CSV.
 
-### Activar circulación en una base existente
+### Habilitar los módulos en una base existente
 
 Con las variables de PostgreSQL configuradas en `.env`, ejecuta `npm run db:migrar` y
-reinicia la API. La migración `004_circulacion.sql` conserva los datos existentes y
-habilita el permiso para los perfiles base de Administración y Bibliotecario de ventanilla.
+reinicia la API. Las migraciones `004_circulacion.sql`, `005_adeudos_reportes.sql` y `006_recuperar_acceso.sql` conservan los registros. Habilitan circulación para Administración y Bibliotecario de ventanilla y reportes para Administración.
 No hace falta reiniciar ni volver a sembrar la base.
 
 - Ventanilla registra el préstamo por matrícula o nómina y clave de ejemplar. Puede volver
   a abrir la boleta por folio, imprimirla o preparar un mensaje de correo o WhatsApp.
 - Las fechas cuentan de lunes a viernes y usan la zona de Monterrey. El atraso genera
-  $10 MXN por día hábil; Tesorería devuelve un acuse simulado. Si el envío falla, la multa
+  $10 MXN por día hábil; Tesorería devuelve un acuse real si se configura su adaptador, o un acuse de prueba en desarrollo. Si el envío falla, la multa
   se conserva y se puede remitir desde Operaciones → Multas y Tesorería.
 - Los lectores ven su posición en Mi cuenta. Las renovaciones se bloquean si hay una
   lista de espera y un ejemplar liberado se presta primero a quien encabeza la fila.
 - Las preguntas frecuentes del asistente sobre objetivo, alcance, plataforma y lista de
   espera funcionan con la API y la base, sin configurar Gemini. Las preguntas abiertas
   sí usan la configuración de Gemini.
+
+### Canales institucionales
+
+- Tesorería recibe solicitudes de compra y adeudos mediante `TESORERIA_WEBHOOK_URL` y
+  `TESORERIA_WEBHOOK_TOKEN`. La resolución de compra recibida se registra con su folio desde la
+  solicitud. Consultar el estado no aprueba ni rechaza.
+- Servicios Escolares recibe cortes de deudores y avisos de reposición mediante
+  `ESCOLARES_WEBHOOK_URL` y `ESCOLARES_WEBHOOK_TOKEN`. El CSV de un corte se puede descargar
+  para remitirlo por otro canal institucional.
+- La recuperación usa `CORREO_WEBHOOK_URL` y `CORREO_WEBHOOK_TOKEN`, y genera enlaces válidos por
+  30 minutos y de un solo uso. Configura `ORIGEN_FRONT` con el origen público de la aplicación.
+  En desarrollo, sin proveedor, el enlace se imprime únicamente en la consola del servidor.
+- Los tres adaptadores reciben JSON por POST mediante HTTPS, con autorización Bearer. El campo
+  `folio` y el encabezado `Idempotency-Key` identifican un mismo aviso en cualquier reintento.
+  Deben responder `{ "confirmado": true, "acuse": "referencia" }`. Sin proveedores configurados
+  no hay entregas externas. Los acuses de prueba de Tesorería y Escolares aparecen como simulados.
+- Los comprobantes se registran después del pago en Tesorería. Para reposiciones, ventanilla
+  captura el tipo de cambio de la fuente institucional y su fecha, y el sistema aplica el último
+  precio de compra guardado en la ficha. No se infiere una tasa ni se cobra dentro del portal.
 
 ### Documentación y pruebas del Sprint 1
 

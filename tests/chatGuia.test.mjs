@@ -14,7 +14,6 @@ import path from 'node:path';
 import {
   ACCIONES,
   SECCIONES_POR_ROL,
-  FUNCIONES_PENDIENTES,
   clasificarAcciones,
   resumirOtrosPerfiles,
   crearGuia,
@@ -103,6 +102,7 @@ describe('Guía: qué puede hacer cada perfil', () => {
       ...COMPRAS,
       ...CUENTAS,
       'OPERAR_CIRCULACION',
+      'CONSULTAR_REPORTES',
     ]);
     assert.equal(resultado.permitidas.length, ACCIONES.length);
     assert.deepEqual(resultado.noPermitidas, []);
@@ -157,7 +157,7 @@ describe('Guía: texto para el asistente', () => {
     assert.match(guia, /No des pasos detallados ni nombres de botones/);
   });
 
-  test('solo lista como pendientes las funciones que ve ese rol', () => {
+  test('describe Mi cuenta como disponible para el lector', () => {
     const alumno = crearGuia({
       primer_nombre: 'Mariana',
       rol_nombre: 'Alumno',
@@ -177,7 +177,14 @@ describe('Guía: qué pueden hacer los demás roles', () => {
       nombre: 'Administrador general',
       rol_nombre: 'Administrador',
       rol_activo: true,
-      permisos: [...CONSULTA, ...CATALOGO, ...COMPRAS, ...CUENTAS, 'OPERAR_CIRCULACION'],
+      permisos: [
+        ...CONSULTA,
+        ...CATALOGO,
+        ...COMPRAS,
+        ...CUENTAS,
+        'OPERAR_CIRCULACION',
+        'CONSULTAR_REPORTES',
+      ],
     },
     {
       nombre: 'Bibliotecario de ventanilla',
@@ -265,7 +272,7 @@ describe('Guía: sigue de acuerdo con el resto del proyecto', () => {
       ACCIONES.flatMap((accion) => [...accion.todos, ...(accion.alguno ?? [])]),
     );
 
-    assert.equal(permisosBase.length, 20);
+    assert.equal(permisosBase.length, 21);
     assert.deepEqual(
       [...permisosGuia].sort(),
       [...permisosBase].sort(),
@@ -292,25 +299,7 @@ describe('Guía: sigue de acuerdo con el resto del proyecto', () => {
     }
   });
 
-  test('las funciones pendientes son las que el front marca con su sprint', () => {
-    const fuente = leer('src/App.tsx');
-    const bloque = fuente.slice(
-      fuente.indexOf('const LATER_SPRINTS'),
-      fuente.indexOf('function LaterSprint'),
-    );
-    const delFront = new Set(
-      [...bloque.matchAll(/\['([^']+)', '(Sprint \d)'\]/g)].map(
-        (hallazgo) => `${hallazgo[1]} · ${hallazgo[2]}`,
-      ),
-    );
-
-    assert.ok(delFront.size > 0, 'No se encontró LATER_SPRINTS en src/App.tsx');
-    for (const funcion of FUNCIONES_PENDIENTES) {
-      assert.ok(
-        delFront.has(`${funcion.nombre} · ${funcion.sprint}`),
-        `"${funcion.nombre}" ya no está pendiente en el front (o cambió de sprint): ` +
-          'actualiza FUNCIONES_PENDIENTES en servicios/chat/guiaApp.js',
-      );
-    }
+  test('la aplicación no vuelve a mostrar marcadores de sprint', () => {
+    assert.doesNotMatch(leer('src/App.tsx'), /LATER_SPRINTS|Esta función se entrega en el/);
   });
 });

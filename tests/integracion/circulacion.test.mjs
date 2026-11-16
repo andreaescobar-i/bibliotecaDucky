@@ -67,7 +67,9 @@ test('registra circulación, protege datos personales y respeta la fila y el acu
   const recurso = ruta + '/prestamos/' + p.folio;
   assert.equal((await otro.get(recurso)).status, 403);
   assert.equal((await staff.post(ruta + '/prestamos', alta)).status, 409);
-  const renovado = await staff.post(recurso + '/renovacion');
+  const autoservicio = ruta + '/mi-cuenta/prestamos/' + p.folio + '/renovacion';
+  assert.equal((await otro.post(autoservicio)).status, 404);
+  const renovado = await lector.post(autoservicio);
   assert.equal(renovado.status, 200, JSON.stringify(renovado.body));
   assert.ok(new Date(renovado.body.fecha_vencimiento) > new Date(p.fecha_vencimiento));
   const espera = await otro.post(ruta + '/mi-espera', { claveLibro: clave });

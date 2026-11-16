@@ -172,11 +172,11 @@ export function esperar(clave, identificador) {
   });
 }
 
-async function prestamoActivo(q, folio) {
+export async function prestamoActivo(q, folio, titularId = null) {
   const ref = await one(
     q,
-    'SELECT e.libro_id FROM prestamo p JOIN ejemplar e USING(ejemplar_id) WHERE p.folio=$1',
-    [folio],
+    'SELECT e.libro_id FROM prestamo p JOIN ejemplar e USING(ejemplar_id) WHERE p.folio=$1 AND ($2::bigint IS NULL OR p.usuario_id=$2)',
+    [folio, titularId],
   );
   exigir(ref, 'Préstamo no encontrado.', 404);
   await lockLibro(q, ref.libro_id);
@@ -191,9 +191,9 @@ async function prestamoActivo(q, folio) {
   return p;
 }
 
-export function renovar(folio, operador) {
+export function renovar(folio, operador, soloTitular = false) {
   return ejecutarTransaccion(async (q) => {
-    const p = await prestamoActivo(q, folio);
+    const p = await prestamoActivo(q, folio, soloTitular ? operador : null);
     await cuenta(q, p.identificador);
     await restricciones(q, p.usuario_id);
     exigir(!(await primero(q, p.libro_id)), 'No se puede renovar: hay una lista de espera.');
@@ -273,18 +273,22 @@ export function remitirMulta(id) {
     const a = await one(
       q,
       `SELECT a.*,p.folio,u.identificador FROM adeudo a JOIN prestamo p USING(prestamo_id)
-      JOIN usuario u USING(usuario_id) WHERE adeudo_id=$1 AND tipo='MULTA' FOR UPDATE OF a`,
+      JOIN usuario u USING(usuario_id) WHERE adeudo_id=$1 AND tipo IN ('MULTA','REPOSICION') FOR UPDATE OF a`,
       [id],
     );
-    exigir(a, 'Multa no encontrada.', 404);
-    if (a.acuse_tesoreria) {
+    exigir(a, 'Adeudo no encontrado.', 404);
+    if (
+      a.acuse_tesoreria &&
+      !(a.modo_envio_tesoreria === 'SIMULADO' && process.env.TESORERIA_WEBHOOK_URL)
+    ) {
       return a;
     }
     exigir(a.estado === 'PENDIENTE', 'No hay una multa pendiente para remitir.');
     const envio = await enviarSolicitud({
-      ...a,
-      folio: 'MULTA-' + id,
-      tipo: 'MULTA',
+      monto_mxn: a.monto_mxn,
+      identificador: a.identificador,
+      folio: a.tipo + '-' + id,
+      tipo: a.tipo,
       folioPrestamo: a.folio,
     });
     exigir(
@@ -294,9 +298,9 @@ export function remitirMulta(id) {
     );
     return one(
       q,
-      `UPDATE adeudo SET acuse_tesoreria=$2,fecha_envio_tesoreria=now()
+      `UPDATE adeudo SET acuse_tesoreria=$2,fecha_envio_tesoreria=now(),modo_envio_tesoreria=$3
       WHERE adeudo_id=$1 RETURNING *`,
-      [id, envio.acuse],
+      [id, envio.acuse, envio.modo ?? 'SIMULADO'],
     );
   });
 }
@@ -308,16 +312,14 @@ export async function buscar(folio) {
 }
 
 const MULTAS = `SELECT a.adeudo_id,a.tipo,a.concepto,a.monto_mxn,a.estado,a.acuse_tesoreria,
-  a.fecha_envio_tesoreria,p.folio,l.titulo FROM adeudo a JOIN prestamo p USING(prestamo_id)
-  JOIN ejemplar e USING(ejemplar_id) JOIN libro l USING(libro_id)`;
+  a.fecha_envio_tesoreria,a.modo_envio_tesoreria,p.folio,l.titulo, pg.folio_tesoreria, pg.fecha_pago FROM adeudo a JOIN prestamo p USING(prestamo_id)
+  JOIN ejemplar e USING(ejemplar_id) JOIN libro l USING(libro_id) LEFT JOIN pago pg USING(adeudo_id)`;
 
 export async function multas(folio) {
   return (
-    await db.query(
-      MULTAS +
-        " WHERE a.tipo='MULTA' AND ($1='' OR p.folio=$1) ORDER BY a.adeudo_id DESC LIMIT 100",
-      [folio],
-    )
+    await db.query(MULTAS + " WHERE ($1='' OR p.folio=$1) ORDER BY a.adeudo_id DESC LIMIT 100", [
+      folio,
+    ])
   ).rows;
 }
 

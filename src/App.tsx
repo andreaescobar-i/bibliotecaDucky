@@ -12,8 +12,12 @@ import { SessionNavigation } from './components/SessionNavigation';
 import { screens, defaultRoutes, normalizeText, routeForRole } from './navigation';
 import { pageCount, pagedList } from './listas';
 
+import { AssignProfile, ProfileEditor } from './components/ProfileManagement';
+import { PurchaseResolution } from './components/PurchaseResolution';
 import { PurchaseDialog } from './components/PurchaseDialog';
 import { Circulation, circulationRoutes, WaitButton } from './components/Circulation';
+import { DebtManagement, Reports, Suspensions } from './components/LibraryManagement';
+import { Recovery } from './components/Recovery';
 import { ChatAssistant } from './components/ChatAssistant';
 import { validateLines, findPurchase } from './purchases';
 import {
@@ -31,14 +35,6 @@ import {
   type Session,
 } from './api';
 
-// Pantallas y ventanas de sprints posteriores: se muestran sin datos hasta que tengan su API.
-const LATER_SPRINTS: Record<string, [string, string]> = {
-  '207-1046': ['Alumnos suspendidos', 'Sprint 3'],
-  '211-962': ['Registrar pago', 'Sprint 3'],
-  '211-1005': ['Reportar libro perdido', 'Sprint 3'],
-  '211-1194': ['Lista de suspendidos', 'Sprint 3'],
-  '207-1430': ['Reportes e inventario', 'Sprint 5'],
-};
 // La API separa la ubicación en estante y fila: "LIT · A1", "LIT-A1" o "LIT/A1"
 const LOCATION_FORMAT = /^(estante\s+)?[^\s·/-]+\s*[·/-]\s*\S+$/i;
 const LOCATION_HINT = 'Escribe la ubicación como estante y fila, por ejemplo LIT · A1 o LIT-A1.';
@@ -46,19 +42,6 @@ const LOCATION_HINT = 'Escribe la ubicación como estante y fila, por ejemplo LI
 // Opción de la baja desde Gestión de catálogo: un ejemplar o la ficha con todos sus ejemplares
 const REMOVAL_CHOICE = 'Qué dar de baja';
 const WHOLE_BOOK = 'LIBRO_COMPLETO';
-function LaterSprint({ id }: { id: string }) {
-  const [title, sprint] = LATER_SPRINTS[id];
-  return (
-    <section className="purchase-dialog later-sprint" aria-label={title}>
-      <h2>{title}</h2>
-      <p>
-        Esta función se entrega en el {sprint}. Aún no está conectada a la base de datos, por eso no
-        se muestran datos.
-      </p>
-    </section>
-  );
-}
-
 export default function App() {
   // Datos persistidos y sesión.
   const [data, setData] = useState<Data>(emptyData);
@@ -89,6 +72,7 @@ export default function App() {
   const menuElement = useRef<HTMLDivElement | null>(null);
   const [toast, setToast] = useState('');
   const [revision, setRevision] = useState(0);
+  const [profileEditor, setProfileEditor] = useState<string | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [password, setPassword] = useState({ actual: '', nueva: '', confirmacion: '' });
   const root = useRef<HTMLDivElement>(null);
@@ -171,6 +155,7 @@ export default function App() {
     void refresh(usuario.permisos);
   }
   function go(id: string) {
+    setProfileEditor(null);
     id = routeForRole(id, sessionStorage.getItem('ducky-role') || role);
     setRoute(id);
     location.hash = id;
@@ -288,17 +273,6 @@ export default function App() {
       open('211-1295');
       return;
     }
-    if (actionName === 'continuar' && overlay === '211-1295') {
-      if (!Object.values(fields).some(Boolean)) {
-        notify('Escribe tu usuario institucional.');
-        return;
-      }
-      close();
-      notify(
-        'El sistema aún no restablece contraseñas en línea: pide al Administrador de la biblioteca una contraseña temporal.',
-      );
-      return;
-    }
     if (['cerrar', 'cancelar', 'entendido', 'volver'].includes(actionName)) {
       close();
       return;
@@ -329,6 +303,7 @@ export default function App() {
       renovacion: '207-712',
       renovaciones: '207-712',
       'multas y tesoreria': '207-849',
+      'multas y pagos': '207-849',
       'lista de espera': 'circulacion-espera',
       suspendidos: '207-1046',
       'gestion de libros': role === 'Administrador' ? '247-2861' : '247-3086',
@@ -365,7 +340,7 @@ export default function App() {
         'Devolución',
         'Renovación',
         'Lista de espera',
-        'Multas y Tesorería',
+        'Multas y pagos',
         'Suspendidos',
       ]);
       return;
@@ -711,7 +686,7 @@ export default function App() {
       return;
     }
     if (actionName === 'consultar autorizacion') {
-      void remote(() => api.resolvePurchase(current, 'Autorizar'));
+      openWith('2081-2172', current, () => purchaseDetail(current));
       return;
     }
     if (actionName === 'confirmar revision') {
@@ -770,8 +745,7 @@ export default function App() {
       return;
     }
     if (actionName === 'autorizar' || actionName === 'rechazar') {
-      const decision = actionName === 'autorizar' ? 'Autorizar' : 'Rechazar';
-      void remote(() => api.resolvePurchase(current, decision), close);
+      openWith('2081-2172', current, () => purchaseDetail(current));
       return;
     }
     if (actionName === 'confirmar desactivacion') {
@@ -923,7 +897,8 @@ export default function App() {
     field,
   };
   const Screen = screens[route] || screens['27-759'];
-  const Overlay = LATER_SPRINTS[overlay] ? () => <LaterSprint id={overlay} /> : screens[overlay];
+  const Overlay = screens[overlay];
+  const canOperate = session?.permisos.includes('OPERAR_CIRCULACION');
   const selectedRequest = data.requests.find((r) => r.id === selected);
   const availableCopies = (book.copyList || []).filter((c) => c.estado === 'Disponible');
   return (
@@ -964,7 +939,23 @@ export default function App() {
                 </button>
               </form>
             )}
-            {circulationRoutes[route] ? (
+            {route === '207-849' || route === '207-1046' ? (
+              canOperate ? (
+                route === '207-849' ? (
+                  <DebtManagement />
+                ) : (
+                  <Suspensions />
+                )
+              ) : (
+                <p className="purchase-dialog">Esta operación requiere permiso de circulación.</p>
+              )
+            ) : route === '207-1430' ? (
+              session?.permisos.includes('CONSULTAR_REPORTES') ? (
+                <Reports />
+              ) : (
+                <p className="purchase-dialog">Esta operación requiere permiso de reportes.</p>
+              )
+            ) : circulationRoutes[route] ? (
               circulationRoutes[route] === 'account' ||
               session?.permisos.includes('OPERAR_CIRCULACION') ? (
                 <Circulation
@@ -976,8 +967,6 @@ export default function App() {
               ) : (
                 <p className="purchase-dialog">Esta operación requiere permiso de circulación.</p>
               )
-            ) : LATER_SPRINTS[route] ? (
-              <LaterSprint id={route} />
             ) : (
               <Screen />
             )}
@@ -987,6 +976,22 @@ export default function App() {
             {route === '371-1836' && (
               <section className="purchase-dialog" aria-label="Perfiles registrados">
                 <h3>Perfiles registrados</h3>
+                {session?.permisos.includes('CREAR_PERFILES') && (
+                  <button className="action" type="button" onClick={() => setProfileEditor('new')}>
+                    Crear perfil
+                  </button>
+                )}
+                {profileEditor !== null && (
+                  <ProfileEditor
+                    key={profileEditor}
+                    profile={profileEditor === 'new' ? undefined : profileEditor}
+                    onCancel={() => setProfileEditor(null)}
+                    onSaved={async () => {
+                      await refresh();
+                      notify('Perfil guardado.');
+                    }}
+                  />
+                )}
                 <div className="live-table-wrap">
                   <table className="live-table">
                     <thead>
@@ -1014,7 +1019,16 @@ export default function App() {
                           <td>{p.activeAccounts}</td>
                           <td>{p.active ? 'Activo' : 'Inactivo'}</td>
                           <td>
-                            {p.active && (
+                            {p.active && session?.permisos.includes('MODIFICAR_PERFILES') && (
+                              <button
+                                className="action"
+                                type="button"
+                                onClick={() => setProfileEditor(p.key)}
+                              >
+                                Editar perfil
+                              </button>
+                            )}
+                            {p.active && session?.permisos.includes('DESACTIVAR_PERFILES') && (
                               <button
                                 className="action"
                                 onClick={() => open('373-1903', undefined, { perfil: p })}
@@ -1073,7 +1087,35 @@ export default function App() {
                 ×
               </button>
               <Suspense fallback={<p>Cargando…</p>}>
-                {overlay === '321-2162' ? (
+                {overlay === '211-1295' ? (
+                  <Recovery />
+                ) : overlay === '283-1681' ? (
+                  session?.permisos.includes('ASIGNAR_PERFILES') ? (
+                    <AssignProfile
+                      account={selected}
+                      profiles={data.profiles || []}
+                      onSaved={async () => {
+                        await refresh();
+                        close();
+                        notify('Perfil asignado.');
+                      }}
+                    />
+                  ) : (
+                    <p className="purchase-dialog">No tienes permiso para asignar perfiles.</p>
+                  )
+                ) : ['211-962', '211-1005', '211-1194'].includes(overlay) ? (
+                  canOperate ? (
+                    overlay === '211-1194' ? (
+                      <Suspensions showCut />
+                    ) : (
+                      <DebtManagement start={overlay === '211-962' ? 'pago' : 'perdida'} />
+                    )
+                  ) : (
+                    <p className="purchase-dialog">
+                      Esta operación requiere permiso de circulación.
+                    </p>
+                  )
+                ) : overlay === '321-2162' ? (
                   // Asistente conectado a la API; sustituye a la ventana estática del diseño
                   <ChatAssistant userName={session?.nombre} close={close} />
                 ) : ['211-1204', '211-1260', '2081-2172', '2081-2208'].includes(overlay) ? (
@@ -1131,7 +1173,14 @@ export default function App() {
                     <Action primary>Confirmar revisión</Action>
                   )}
                   {selectedRequest.state === 'En Tesorería' && (
-                    <Action primary>Consultar autorización</Action>
+                    <>
+                      <button className="action" type="button" onClick={() => void refresh()}>
+                        Actualizar estado
+                      </button>
+                      {session?.permisos.includes('GESTIONAR_SOLICITUDES') && (
+                        <PurchaseResolution folio={selectedRequest.id} onSaved={refresh} />
+                      )}
+                    </>
                   )}
                   {['En Tesorería', 'Autorizado', 'Recibido parcialmente'].includes(
                     selectedRequest.state,
