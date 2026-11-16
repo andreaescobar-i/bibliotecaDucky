@@ -35,7 +35,25 @@ Comando para generar `JWT_SECRETO`:
 node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
 ```
 
-## Variables nuevas que propongo para el chatbot
+## Variables del chatbot que quedaron construidas (15 de noviembre de 2026)
+
+Esta tabla es la vigente; la propuesta original sigue más abajo. Todas son opcionales y están en
+`.env.example`.
+
+| Variable                 | Para qué sirve                                                   | Valor por omisión       |
+| ------------------------ | ---------------------------------------------------------------- | ----------------------- |
+| `GEMINI_API_KEY`         | Key de Agent Platform. Sin ella el asistente queda apagado       | (ninguno)               |
+| `GEMINI_MODELO`          | Modelo que responde                                              | `gemini-3.5-flash-lite` |
+| `CHAT_HABILITADO`        | `false` apaga el asistente                                       | `true`                  |
+| `CHAT_PGUSER`            | Usuario de PostgreSQL de solo lectura para consultar el catálogo | (ninguno)               |
+| `CHAT_PGPASSWORD`        | Contraseña de ese usuario                                        | (ninguno)               |
+| `CHAT_LIMITE_POR_MINUTO` | Preguntas por cuenta en cada minuto                              | `6`                     |
+| `CHAT_MAX_CARACTERES`    | Largo máximo de una pregunta                                     | `500`                   |
+
+No se construyeron `CHAT_LIMITE_POR_DIA` ni `CHAT_LIMITE_GLOBAL_DIA`: se decidió no poner
+límites por día.
+
+## Variables nuevas que propongo para el chatbot (propuesta original)
 
 Todas serían **opcionales**: si faltan, la app arranca igual y el asistente responde que no está
 disponible. Así el chatbot nunca impide que el resto del sistema funcione.

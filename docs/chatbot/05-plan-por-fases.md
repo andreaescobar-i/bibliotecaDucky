@@ -22,15 +22,33 @@ publicar.
 
 ## Avance
 
-| Fase | Estado                          | Evidencia                                                   |
-| ---- | ------------------------------- | ----------------------------------------------------------- |
-| 1    | Terminada, 15 de noviembre 2026 | 79 pruebas sin base y 206 con base; app encendida y probada |
-| 2    | Terminada, 15 de noviembre 2026 | 88 pruebas sin base y 230 con base; rama `chatbot`          |
-| 3    | Terminada, 15 de noviembre 2026 | 106 pruebas sin base y 230 con base; `npm run chat:probar`  |
-| 4    | Terminada, 15 de noviembre 2026 | 129 pruebas sin base y 245 con base; preguntas reales       |
-| 5    | Terminada, 15 de noviembre 2026 | 143 pruebas sin base y 254 con base; app abierta por rol    |
-| 6    | Terminada, 15 de noviembre 2026 | Ventana genérica probada en navegador, escritorio y móvil   |
-| 7    | Pendiente de aprobación         |                                                             |
+| Fase | Estado                                 | Evidencia                                                   |
+| ---- | -------------------------------------- | ----------------------------------------------------------- |
+| 1    | Terminada, 15 de noviembre 2026        | 79 pruebas sin base y 206 con base; app encendida y probada |
+| 2    | Terminada, 15 de noviembre 2026        | 88 pruebas sin base y 230 con base; rama `chatbot`          |
+| 3    | Terminada, 15 de noviembre 2026        | 106 pruebas sin base y 230 con base; `npm run chat:probar`  |
+| 4    | Terminada, 15 de noviembre 2026        | 129 pruebas sin base y 245 con base; preguntas reales       |
+| 5    | Terminada, 15 de noviembre 2026        | 143 pruebas sin base y 254 con base; app abierta por rol    |
+| 6    | Terminada, 15 de noviembre 2026        | Ventana genérica probada en navegador, escritorio y móvil   |
+| 7    | Cerrada en parte, 15 de noviembre 2026 | Solo la documentación final; ver nota abajo                 |
+| 8    | En espera                              | pgvector: no se usa por el momento                          |
+| 9    | No iniciada                            | Solo aplica si la app se publica                            |
+
+Estado al cierre del 15 de noviembre de 2026: **el chatbot funciona completo en local**
+(fases 1 a 6). De la Fase 7 solo se hizo la documentación final, por decisión del proyecto: se
+espera poca gente usándolo, así que **no se construyeron** los límites por día, el tope global,
+la reducción de costo por pregunta, la lista de preguntas de evaluación ni la alerta de
+presupuesto. Sí existen el límite por minuto (6 preguntas por cuenta), el largo máximo de 500
+caracteres y el interruptor `CHAT_HABILITADO`.
+
+Pendientes conocidos, por si se retoma:
+
+- Los límites por día y la alerta de presupuesto de Google Cloud, si el uso crece.
+- Cada pregunta envía unos 2,900 tokens de entrada; se puede recortar.
+- La ventana del asistente es provisional; falta el diseño definitivo del equipo.
+- Confirmar a mano el posible error del botón "Historial" en Gestión de libros.
+- Las conversaciones no se borran nunca; falta decidir cuánto tiempo conservarlas.
+- La rama `chatbot` no se ha subido al repositorio remoto ni tiene pull request.
 
 Lo que quedó distinto del plan en la Fase 4:
 

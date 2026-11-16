@@ -22,7 +22,7 @@ npm run build
 npm run preview
 ```
 
-La carpeta `dist/` incluida contiene la compilación estática. Debe servirse mediante HTTP; no abrir `index.html` directamente con `file://`.
+`npm run build` genera la compilación estática en la carpeta `dist/`, que no se sube al repositorio. Debe servirse mediante HTTP; no abrir `index.html` directamente con `file://`.
 
 ## Probar los roles
 
@@ -439,8 +439,10 @@ así la cookie de sesión funciona sin configurar CORS en el navegador.
 - [`docs/postman/SIGB-Sprint1.postman_collection.json`](docs/postman/SIGB-Sprint1.postman_collection.json):
   62 peticiones de ejemplo en orden por rol. En Postman: Importar → elegir el archivo → Run
   collection. Ejecutar `npm run db:reset` antes de correrla completa.
-- `npm test`: 78 pruebas sin BD (front y API). `npm run test:bd`: 205 pruebas contra la BD real;
-  se pueden repetir sin reiniciar la base porque cada archivo limpia lo que crea.
+- `npm test`: 143 pruebas sin BD (front y API). `npm run test:bd`: 254 pruebas contra la BD real;
+  se pueden repetir sin reiniciar la base porque cada archivo limpia lo que crea. Las cifras
+  incluyen las del asistente Ducky, que usan un modelo simulado y no llaman a Google.
+- [`docs/chatbot/`](docs/chatbot/): diagnóstico, diseño y avance por fases del asistente Ducky.
 
 ### Avance del Sprint 1
 

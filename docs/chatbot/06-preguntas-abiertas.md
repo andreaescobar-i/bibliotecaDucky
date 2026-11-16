@@ -1,5 +1,29 @@
 # 06 · Preguntas abiertas
 
+## Estado al 15 de noviembre de 2026
+
+Las preguntas de abajo se escribieron antes de empezar. Así quedaron:
+
+| #   | Pregunta                                  | Cómo se resolvió                                                             |
+| --- | ----------------------------------------- | ---------------------------------------------------------------------------- |
+| 1   | Ejecutar la Fase 1                        | Autorizada y hecha. `PGPASSWORD` quedó con un valor de relleno               |
+| 2   | Responder sobre la cuenta de cada usuario | Sí: consulta "mi cuenta", siempre con la cuenta de la sesión                 |
+| 3   | Quién lo usa y cuánto gastar              | Poca gente; no se construyen límites por día ni alerta de presupuesto        |
+| 4   | Modelo de Gemini                          | Uno ligero: `gemini-3.5-flash-lite`. Se revisará más adelante                |
+| 5   | Cómo se creó la key                       | Sin respuesta. La prueba real confirmó que llega al proyecto de Google Cloud |
+| 6   | Quién revisa la guía                      | La guía es general (rol y permisos); se verificó abriendo la aplicación      |
+| 7   | Cuánto se guardan las conversaciones      | **Sin decidir.** Hoy no se borran                                            |
+| 8   | Qué tan formal                            | Trato de usted, nombre "Ducky", español, texto simple                        |
+| 9   | Qué hace cuando no sabe                   | Dice "No cuento con esa información" y sugiere acudir al personal            |
+| 10  | Reglas: de la base o del documento        | Días y renovaciones salen de la base; multa y reposición, del documento      |
+| 11  | Coordinación con el equipo                | Rama `chatbot`, un commit por fase; el pull request lo hace el usuario       |
+| 12  | Estándar de codificación                  | Se imitó el estilo existente; el documento del estándar no se recibió        |
+| 13  | Web o app móvil                           | Solo web                                                                     |
+| 14  | Se va a publicar                          | **Sin decidir.** La Fase 9 no se inició                                      |
+| 15  | Corregir documentos desactualizados       | Hecho: `VERIFICACION.md` y README                                            |
+
+## Preguntas originales
+
 Lo que no pude resolver leyendo el código. Cada pregunta trae mi recomendación, por si prefieres
 contestar "sí a todo lo recomendado".
 
