@@ -194,6 +194,14 @@ export const purchaseDetail = async (folio: string) =>
 export const bookPdfUrl = (code: string) => `/api/listado-libros/pdf?clave=${path(code)}&vista=1`;
 export const bookPrintUrl = (code: string) => `/api/listado-libros/impresion?clave=${path(code)}`;
 
+// Asistente Ducky: la conversación abierta, una pregunta nueva y el reinicio.
+export type ChatMessage = { emisor: 'Usuario' | 'Ducky'; texto: string; fecha: string };
+export const chatHistory = async () =>
+  (await request<{ mensajes: ChatMessage[] }>('/chat/conversacion')).mensajes;
+export const sendChat = async (mensaje: string) =>
+  (await request<{ respuesta: ChatMessage }>('/chat/mensajes', 'POST', { mensaje })).respuesta;
+export const resetChat = () => request('/chat/reinicio', 'POST');
+
 export const api = {
   createUser: (body: object) => request('/usuarios', 'POST', body),
   updateUser: (id: string, body: object) => request(`/usuarios/${path(id)}`, 'PUT', body),

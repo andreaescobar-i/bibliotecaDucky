@@ -532,16 +532,116 @@
   top: 10px;
   font-size: 22px;
 }
-.chat-messages {
-  max-height: 220px;
-  overflow: auto;
-  border-top: 1px solid #ddd;
-  padding: 16px;
+/* Asistente Ducky: ventana genérica y provisional conectada a la API */
+.chat-assistant {
+  display: grid;
+  /* minmax(0, 1fr): la columna nunca crece más que la ventana, aunque el contenido sea ancho */
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto minmax(180px, 1fr) auto auto auto;
+  gap: 12px;
+  padding: 24px;
+  height: min(620px, calc(100vh - 80px));
+  box-sizing: border-box;
+  font-size: 14px;
+  color: #1d2129;
+}
+.chat-assistant header h2 {
+  margin: 0 24px 4px 0;
+  font-size: 18px;
+  font-weight: 500;
+}
+.chat-assistant header p {
+  margin: 0;
+  color: #4e5969;
   font-size: 13px;
 }
-.chat-messages p {
-  margin: 8px 0;
+.chat-list {
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #f7fbfa;
+}
+.chat-note {
+  margin: 0;
+  color: #4e5969;
+  font-size: 13px;
+}
+.chat-note.typing {
+  font-style: italic;
+}
+.chat-bubble {
+  max-width: 85%;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: white;
+  border: 1px solid var(--border);
+  align-self: flex-start;
+}
+.chat-bubble.mine {
+  align-self: flex-end;
+  background: #e3f6f3;
+  border-color: #b9e4de;
+}
+.chat-bubble.failed {
+  background: #fdf0f0;
+  border-color: #f0c2c2;
+  color: #a32020;
+}
+.chat-bubble small {
+  display: block;
+  margin-bottom: 2px;
+  color: var(--muted);
+  font-size: 11px;
+}
+.chat-bubble p {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.45;
+}
+.chat-topics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.chat-topics .action {
+  margin-left: 0;
   white-space: normal;
+  text-align: left;
+}
+.chat-form {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+.chat-form textarea {
+  flex: 1;
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid #b8c5c3;
+  border-radius: 6px;
+  font: inherit;
+  resize: none;
+}
+.chat-assistant .action:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.chat-assistant footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: var(--muted);
+}
+@media (max-width: 640px) {
+  .chat-assistant {
+    padding: 20px 16px;
+    height: calc(100dvh - 32px);
+  }
 }
 .loading {
   padding: 60px;

@@ -29,7 +29,7 @@ publicar.
 | 3    | Terminada, 15 de noviembre 2026 | 106 pruebas sin base y 230 con base; `npm run chat:probar`  |
 | 4    | Terminada, 15 de noviembre 2026 | 129 pruebas sin base y 245 con base; preguntas reales       |
 | 5    | Terminada, 15 de noviembre 2026 | 143 pruebas sin base y 254 con base; app abierta por rol    |
-| 6    | En espera (frontend del equipo) |                                                             |
+| 6    | Terminada, 15 de noviembre 2026 | Ventana genérica probada en navegador, escritorio y móvil   |
 | 7    | Pendiente de aprobación         |                                                             |
 
 Lo que quedó distinto del plan en la Fase 4:
@@ -53,8 +53,10 @@ Decisiones tomadas:
 - Trabajar en la rama `chatbot`, con un commit por fase, para integrarla con un pull request.
 - Usar un modelo ligero de Gemini (`gemini-3.5-flash-lite`) y revisarlo conforme avance el
   proyecto.
-- No tocar el frontend por ahora: el equipo tiene su diseño en Figma. La Fase 6 queda en espera;
-  el chat se prueba con Postman o `curl`.
+- La ventana del asistente es un diseño genérico y provisional (`ChatAssistant.tsx`), solo para
+  ver el funcionamiento; se reemplaza cuando el equipo tenga el diseño definitivo.
+- La guía de la app es general: identifica el rol y los permisos de quien pregunta, sin pasos ni
+  nombres de botones.
 
 ---
 

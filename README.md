@@ -41,7 +41,8 @@ Los seis roles son Alumno, Maestro, Colaborador, Bibliotecario, Administrador y 
   historial); solicitudes de compra, presupuesto, recepciones y entrega al catálogo.
 - **Sprints 2 a 5:** préstamos, devolución, renovación, Mi cuenta, multas, suspendidos y reportes
   muestran un aviso con el sprint en que se entregan. No muestran datos inventados.
-- **Asistente Ducky:** responde preguntas generales con textos fijos; no consulta la BD.
+- **Asistente Ducky:** conectado a la API (`/api/chat`): responde con datos reales del catálogo y
+  de la cuenta, según los permisos de quien pregunta. Su ventana es un diseño provisional.
 
 El front no guarda datos en el navegador: todo se pide a la API. Solo `sessionStorage` recuerda
 el rol y el libro abierto para recargar la página.
@@ -384,9 +385,14 @@ Todas las respuestas de error de la API tienen la forma
 | GET    | `/api/chat/conversacion` | Sesión iniciada | Conversación abierta de la cuenta                       |
 | POST   | `/api/chat/reinicio`     | Sesión iniciada | Cierra la conversación; la siguiente pregunta abre otra |
 
-- **Solo backend por ahora:** la ventana "Asistente Ducky" del front sigue con sus textos fijos
-  hasta que el equipo la conecte. Se prueba con `curl` o con
+- **Ventana del front:** `src/components/ChatAssistant.tsx` es un diseño genérico y provisional
+  para ver el funcionamiento; sustituye a la ventana estática del diseño hasta tener el
+  definitivo. Recupera la conversación al abrirse, muestra los errores dentro de la ventana y
+  permite reiniciar. La API también se puede probar con
   [`docs/postman/SIGB-Asistente.postman_collection.json`](docs/postman/SIGB-Asistente.postman_collection.json).
+- **Quién pregunta:** en cada pregunta el asistente recibe el rol y el perfil de la cuenta y lo
+  que sus permisos le dejan hacer (`servicios/chat/guiaApp.js`). Responde de forma general, sin
+  pasos ni nombres de botones.
 - **Cómo responde:** el modelo Gemini (por Gemini Enterprise Agent Platform de Google Cloud) no
   escribe SQL. Elige entre consultas ya escritas (`servicios/chat/herramientas.js`): buscar
   libros, ficha con ejemplares, un ejemplar, temas y tipos de uso, reglas de préstamo y la cuenta

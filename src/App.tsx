@@ -13,6 +13,7 @@ import { screens, defaultRoutes, normalizeText, routeForRole } from './navigatio
 import { pageCount, pagedList } from './listas';
 
 import { PurchaseDialog } from './components/PurchaseDialog';
+import { ChatAssistant } from './components/ChatAssistant';
 import { validateLines, findPurchase } from './purchases';
 import {
   api,
@@ -94,7 +95,6 @@ export default function App() {
   const menuAnchor = useRef<HTMLElement | null>(null);
   const menuElement = useRef<HTMLDivElement | null>(null);
   const [toast, setToast] = useState('');
-  const [chat, setChat] = useState<{ who: string; text: string }[]>([]);
   const [revision, setRevision] = useState(0);
   const [session, setSession] = useState<Session | null>(null);
   const [password, setPassword] = useState({ actual: '', nueva: '', confirmacion: '' });
@@ -790,24 +790,7 @@ export default function App() {
       return;
     }
 
-    // Asistente local de demostración.
-    if (actionName === 'enviar') {
-      const q = input('Escribe tu pregunta') || Object.values(fields)[0];
-      if (!q?.trim()) return;
-      const t = normalizeText(q);
-      const reply = t.includes('renov')
-        ? 'Puedes solicitar hasta 2 renovaciones desde Mi cuenta. El bibliotecario valida la cuenta y el préstamo.'
-        : t.includes('multa')
-          ? 'Consulta tus adeudos en Mi cuenta. Los comprobantes se pagan en Tesorería y el bibliotecario registra el pago.'
-          : t.includes('libro')
-            ? 'Busca un título, autor o clave en el catálogo. Ver detalle muestra la ficha y disponibilidad.'
-            : 'Puedo orientarte sobre catálogo, préstamos, renovaciones, multas y tu perfil. Este asistente usa respuestas locales de demostración.';
-      setChat((c) => [...c, { who: 'Tú', text: q }, { who: 'Ducky', text: reply }]);
-      setFields({});
-      return;
-    }
     if (actionName === 'reiniciar') {
-      setChat([]);
       setRevision((v) => v + 1);
       return;
     }
@@ -1068,7 +1051,10 @@ export default function App() {
                 ×
               </button>
               <Suspense fallback={<p>Cargando…</p>}>
-                {['211-1204', '211-1260', '2081-2172', '2081-2208'].includes(overlay) ? (
+                {overlay === '321-2162' ? (
+                  // Asistente conectado a la API; sustituye a la ventana estática del diseño
+                  <ChatAssistant userName={session?.nombre} close={close} />
+                ) : ['211-1204', '211-1260', '2081-2172', '2081-2208'].includes(overlay) ? (
                   <PurchaseDialog
                     mode={overlay}
                     request={selectedRequest}
@@ -1167,15 +1153,6 @@ export default function App() {
                       baja hasta su devolución.
                     </p>
                   )}
-                </div>
-              )}
-              {overlay === '321-2162' && chat.length > 0 && (
-                <div className="chat-messages" aria-live="polite">
-                  {chat.map((m, i) => (
-                    <p key={i}>
-                      <strong>{m.who}:</strong> {m.text}
-                    </p>
-                  ))}
                 </div>
               )}
             </div>
