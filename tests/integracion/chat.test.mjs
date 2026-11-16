@@ -1,8 +1,8 @@
 /*----
  * Programa: chat.test.mjs
  * Objetivo: Probar contra PostgreSQL real las rutas del asistente Ducky: sesión obligatoria,
- *           consultas con el usuario de solo lectura, historial, reinicio, validaciones y
- *           fallas del modelo. Gemini se simula: no se llama a Google ni se gastan créditos.
+ *           consultas con el usuario de solo lectura, historial, reinicio, duración de las
+ *           conversaciones, validaciones y fallas del modelo. Gemini se simula: no se llama a Google ni se gastan créditos.
  *           Requiere npm run db:reset o npm run db:migrar. Uso: npm run test:bd
  * Autores: Equipo OHNO S.A. de C.V.
  * Fecha: 15 de Noviembre de 2026
@@ -18,6 +18,8 @@ process.env.GEMINI_API_KEY = 'key-solo-para-pruebas-automaticas';
 const { app, DbPool, iniciarSesion } = await import('./ayudantes.mjs');
 const { default: DbPoolLectura } = await import('../../config/dbLectura.js');
 const geminiServicio = await import('../../servicios/geminiServicio.js');
+const { default: ENTORNO } = await import('../../config/entorno.js');
+const { limpiarConversaciones } = await import('../../servicios/chat/limpieza.js');
 
 const CUENTAS_PRUEBA = ['A01234567', 'A01999000'];
 const SIN_USUARIO_LECTURA =
@@ -463,5 +465,96 @@ describe('Asistente: fallas del modelo', () => {
 
     assert.equal(respuesta.status, 503);
     assert.equal(respuesta.body.error.mensaje, 'El asistente no está disponible por el momento.');
+  });
+});
+
+describe('Asistente: duración de las conversaciones', () => {
+  const DURACION = ENTORNO.CHAT.HORAS_CONVERSACION; // 12 horas por omisión
+
+  /**
+   * Objetivo: Guardar directamente una conversación iniciada hace cierto número de horas.
+   * @param {string} identificador - Matrícula o nómina de la cuenta.
+   * @param {number} horas - Antigüedad de la conversación.
+   * @param {string} [estatus] - 'ABIERTA' o 'CERRADA'.
+   * @returns {Promise<number>} id_sesion de la conversación creada.
+   */
+  async function crearConversacionAntigua(identificador, horas, estatus = 'ABIERTA') {
+    const sesion = await DbPool.query(
+      `INSERT INTO sesion_chat (id_usuario, canal, estatus, fecha_inicio, fecha_fin)
+       SELECT usuario_id, 'WEB', $3::VARCHAR, now() - ($2::NUMERIC * INTERVAL '1 hour'),
+              CASE WHEN $3 = 'CERRADA' THEN now() END
+       FROM usuario WHERE identificador = $1
+       RETURNING id_sesion`,
+      [identificador, horas, estatus],
+    );
+    const idSesion = sesion.rows[0].id_sesion;
+    await DbPool.query(
+      `INSERT INTO mensaje_chat (id_sesion, emisor, contenido, "timestamp")
+       VALUES ($1, 'USUARIO', 'Pregunta antigua', now() - ($2::NUMERIC * INTERVAL '1 hour')),
+              ($1, 'ASISTENTE', 'Respuesta antigua', now() - ($2::NUMERIC * INTERVAL '1 hour'))`,
+      [idSesion, horas],
+    );
+    return Number(idSesion);
+  }
+
+  test('una conversación que ya cumplió su duración se borra con sus mensajes', async () => {
+    await crearConversacionAntigua('A01234567', DURACION + 1);
+
+    const respuesta = await mariana.get('/api/chat/conversacion');
+
+    assert.deepEqual(respuesta.body, { conversacion: null, mensajes: [] });
+    assert.deepEqual(await leerMensajes('A01234567'), []);
+  });
+
+  test('una conversación que aún no la cumple se conserva', async () => {
+    const idSesion = await crearConversacionAntigua('A01234567', DURACION - 1);
+
+    const respuesta = await mariana.get('/api/chat/conversacion');
+
+    assert.equal(respuesta.body.conversacion.id, idSesion);
+    assert.deepEqual(
+      respuesta.body.mensajes.map((mensaje) => mensaje.texto),
+      ['Pregunta antigua', 'Respuesta antigua'],
+    );
+  });
+
+  test('una pregunta tras el vencimiento abre otra conversación y no recuerda la anterior', async () => {
+    const idAnterior = await crearConversacionAntigua('A01234567', DURACION + 1);
+    let contenidos;
+    geminiServicio.establecerTransporte(async (solicitud) => {
+      contenidos = solicitud.contents;
+      return responderTexto('Sí.');
+    });
+
+    const respuesta = await mariana.post('/api/chat/mensajes', {
+      mensaje: '¿Tienen Pedro Páramo?',
+    });
+
+    assert.equal(respuesta.status, 200);
+    assert.notEqual(respuesta.body.conversacion, idAnterior);
+    assert.deepEqual(contenidos, [{ role: 'user', parts: [{ text: '¿Tienen Pedro Páramo?' }] }]);
+    assert.deepEqual(
+      (await leerMensajes('A01234567')).map((mensaje) => mensaje.contenido),
+      ['¿Tienen Pedro Páramo?', 'Sí.'],
+    );
+  });
+
+  test('la limpieza periódica borra las vencidas, abiertas o cerradas, de cualquier cuenta', async () => {
+    await crearConversacionAntigua('A01234567', DURACION + 1, 'CERRADA');
+    await crearConversacionAntigua('A01999000', DURACION + 5);
+    const vigente = await crearConversacionAntigua('A01999000', DURACION - 1);
+
+    const borradas = await limpiarConversaciones();
+
+    assert.ok(borradas >= 2);
+    assert.deepEqual(await leerMensajes('A01234567'), []);
+    const restantes = await DbPool.query(
+      `SELECT s.id_sesion FROM sesion_chat s JOIN usuario u ON u.usuario_id = s.id_usuario
+       WHERE u.identificador = 'A01999000'`,
+    );
+    assert.deepEqual(
+      restantes.rows.map((fila) => Number(fila.id_sesion)),
+      [vigente],
+    );
   });
 });

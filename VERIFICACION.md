@@ -14,7 +14,7 @@ conectado a la API y el asistente Ducky.
 | `npm run lint`         | Sin errores                                                                 |
 | `npm run format:check` | Todos los archivos con el formato de Prettier                               |
 | `npm test`             | 143 de 143 pruebas pasan (no usan base ni llaman a Google)                  |
-| `npm run test:bd`      | 254 de 254 pruebas pasan contra la base real                                |
+| `npm run test:bd`      | 258 de 258 pruebas pasan contra la base real                                |
 | `npm run build`        | TypeScript y Vite compilan sin errores                                      |
 | `npm run chat:probar`  | Gemini responde por `aiplatform.googleapis.com` con `gemini-3.5-flash-lite` |
 
@@ -36,6 +36,9 @@ Bibliotecario de consulta, Administrador general y Comprador de libros.
 - **Asistente Ducky (con la cuenta de alumna):** tema frecuente, pregunta escrita con Enter,
   cerrar y reabrir (la conversación se conserva), aviso de error ante una falla de red, reinicio
   y ancho móvil de 390 px.
+
+- **Duración de las conversaciones:** con una conversación de 13 horas y otra de 11 guardadas en
+  la base, al arrancar la API se borró solo la de 13 horas, con sus mensajes.
 
 ### Lo que no se verificó
 

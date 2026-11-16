@@ -41,13 +41,16 @@ la reducción de costo por pregunta, la lista de preguntas de evaluación ni la 
 presupuesto. Sí existen el límite por minuto (6 preguntas por cuenta), el largo máximo de 500
 caracteres y el interruptor `CHAT_HABILITADO`.
 
+Después del cierre se agregó la duración de las conversaciones: viven 12 horas desde que se
+inician (`CHAT_HORAS_CONVERSACION`) y luego se borran de la base con sus mensajes. Con eso las
+pruebas quedaron en 143 sin base y 258 con base.
+
 Pendientes conocidos, por si se retoma:
 
 - Los límites por día y la alerta de presupuesto de Google Cloud, si el uso crece.
 - Cada pregunta envía unos 2,900 tokens de entrada; se puede recortar.
 - La ventana del asistente es provisional; falta el diseño definitivo del equipo.
 - Confirmar a mano el posible error del botón "Historial" en Gestión de libros.
-- Las conversaciones no se borran nunca; falta decidir cuánto tiempo conservarlas.
 - La rama `chatbot` no se ha subido al repositorio remoto ni tiene pull request.
 
 Lo que quedó distinto del plan en la Fase 4:

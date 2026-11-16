@@ -125,10 +125,25 @@ async function obtenerUltimosMensajes(idSesion, limite) {
   return resultado.rows;
 }
 
+/**
+ * Objetivo: Borrar las conversaciones que ya cumplieron su duración, abiertas o cerradas. Sus
+ *   mensajes se borran con ellas (ON DELETE CASCADE).
+ * @param {number} horas - Horas que vive una conversación desde que se inicia.
+ * @returns {Promise<number>} Número de conversaciones borradas.
+ */
+async function eliminarSesionesVencidas(horas) {
+  const resultado = await DbPool.query(
+    `DELETE FROM sesion_chat WHERE fecha_inicio < now() - ($1::NUMERIC * INTERVAL '1 hour')`,
+    [horas],
+  );
+  return resultado.rowCount;
+}
+
 export {
   obtenerSesionAbierta,
   crearSesion,
   cerrarSesionesAbiertas,
   registrarMensaje,
   obtenerUltimosMensajes,
+  eliminarSesionesVencidas,
 };

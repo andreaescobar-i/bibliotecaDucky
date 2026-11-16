@@ -83,6 +83,8 @@ const ENTORNO = Object.freeze({
   CHAT: Object.freeze({
     LIMITE_POR_MINUTO: Number(process.env.CHAT_LIMITE_POR_MINUTO) || 6,
     MAX_CARACTERES: Number(process.env.CHAT_MAX_CARACTERES) || 500,
+    // Horas que vive una conversación desde que se inicia; después se borra con sus mensajes
+    HORAS_CONVERSACION: Number(process.env.CHAT_HORAS_CONVERSACION) || 12,
   }),
 });
 

@@ -8,11 +8,15 @@
 import ENTORNO from './config/entorno.js';
 import app from './app.js';
 import DbPool from './config/db.js';
+import { iniciarLimpiezaConversaciones } from './servicios/chat/limpieza.js';
 
 const servidor = app.listen(ENTORNO.PUERTO, () => {
   console.log(`API SIGB escuchando en http://localhost:${ENTORNO.PUERTO}/api`);
   console.log(`Estado de la BD: http://localhost:${ENTORNO.PUERTO}/api/salud`);
 });
+
+// Las conversaciones del asistente se borran al cumplir su duración (CHAT_HORAS_CONVERSACION)
+const detenerLimpieza = iniciarLimpiezaConversaciones();
 
 /**
  * Objetivo: Cerrar el servidor y las conexiones a la BD antes de salir del proceso.
@@ -21,6 +25,7 @@ const servidor = app.listen(ENTORNO.PUERTO, () => {
  */
 function apagar(senal) {
   console.log(`Señal ${senal} recibida; cerrando la API...`);
+  detenerLimpieza();
   servidor.close(async () => {
     await DbPool.end();
     process.exit(0);

@@ -12,7 +12,7 @@ Las preguntas de abajo se escribieron antes de empezar. Así quedaron:
 | 4   | Modelo de Gemini                          | Uno ligero: `gemini-3.5-flash-lite`. Se revisará más adelante                |
 | 5   | Cómo se creó la key                       | Sin respuesta. La prueba real confirmó que llega al proyecto de Google Cloud |
 | 6   | Quién revisa la guía                      | La guía es general (rol y permisos); se verificó abriendo la aplicación      |
-| 7   | Cuánto se guardan las conversaciones      | **Sin decidir.** Hoy no se borran                                            |
+| 7   | Cuánto se guardan las conversaciones      | 12 horas desde que se inician; después se borran con sus mensajes            |
 | 8   | Qué tan formal                            | Trato de usted, nombre "Ducky", español, texto simple                        |
 | 9   | Qué hace cuando no sabe                   | Dice "No cuento con esa información" y sugiere acudir al personal            |
 | 10  | Reglas: de la base o del documento        | Días y renovaciones salen de la base; multa y reposición, del documento      |

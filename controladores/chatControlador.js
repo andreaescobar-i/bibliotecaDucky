@@ -84,6 +84,7 @@ function obtenerMensajeDeFalla(err) {
  * @param {Function} next - Envía el error al middleware de errores.
  * @returns {Promise<void>}
  * Limitaciones: La cuenta que pregunta siempre es la de la sesión; nunca llega en el cuerpo.
+ *   Las conversaciones duran CHAT_HORAS_CONVERSACION horas; al vencer se borran.
  */
 async function postMensaje(req, res, next) {
   try {
@@ -92,6 +93,8 @@ async function postMensaje(req, res, next) {
       throw new ErrorAplicacion(ESTADO_NO_DISPONIBLE, MENSAJE_NO_DISPONIBLE);
     }
 
+    // Una conversación vencida no se continúa: se borra y la pregunta abre una nueva
+    await chatModelo.eliminarSesionesVencidas(ENTORNO.CHAT.HORAS_CONVERSACION);
     const usuarioId = req.usuario.usuario_id;
     const sesion =
       (await chatModelo.obtenerSesionAbierta(usuarioId)) ??
@@ -150,6 +153,7 @@ async function postMensaje(req, res, next) {
  */
 async function getConversacion(req, res, next) {
   try {
+    await chatModelo.eliminarSesionesVencidas(ENTORNO.CHAT.HORAS_CONVERSACION);
     const sesion = await chatModelo.obtenerSesionAbierta(req.usuario.usuario_id);
     const mensajes = sesion
       ? await chatModelo.obtenerUltimosMensajes(sesion.id_sesion, MAX_MENSAJES_CONVERSACION)

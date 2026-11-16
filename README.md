@@ -404,6 +404,9 @@ Todas las respuestas de error de la API tienen la forma
   pregunta.
 - **Historial:** cada pregunta y respuesta queda en `sesion_chat` y `mensaje_chat`, con el
   modelo, los tokens y las consultas hechas. El modelo recibe los últimos 10 mensajes.
+- **Duración:** una conversación vive `CHAT_HORAS_CONVERSACION` (12) horas desde que se inicia.
+  Al cumplirlas se borra de la base con sus mensajes: la API lo revisa en cada uso del asistente
+  y además cada diez minutos.
 - **Límites:** `CHAT_LIMITE_POR_MINUTO` (6) preguntas por cuenta y `CHAT_MAX_CARACTERES` (500)
   por pregunta. Una pregunta vacía o demasiado larga no llega al modelo.
 - **Fallas:** si Google no responde o la base falla, la API contesta 503 con un mensaje claro y
@@ -439,7 +442,7 @@ así la cookie de sesión funciona sin configurar CORS en el navegador.
 - [`docs/postman/SIGB-Sprint1.postman_collection.json`](docs/postman/SIGB-Sprint1.postman_collection.json):
   62 peticiones de ejemplo en orden por rol. En Postman: Importar → elegir el archivo → Run
   collection. Ejecutar `npm run db:reset` antes de correrla completa.
-- `npm test`: 143 pruebas sin BD (front y API). `npm run test:bd`: 254 pruebas contra la BD real;
+- `npm test`: 143 pruebas sin BD (front y API). `npm run test:bd`: 258 pruebas contra la BD real;
   se pueden repetir sin reiniciar la base porque cada archivo limpia lo que crea. Las cifras
   incluyen las del asistente Ducky, que usan un modelo simulado y no llaman a Google.
 - [`docs/chatbot/`](docs/chatbot/): diagnóstico, diseño y avance por fases del asistente Ducky.
