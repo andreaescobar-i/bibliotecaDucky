@@ -13,7 +13,9 @@ import assert from 'node:assert/strict';
 
 process.env.NODE_ENV = 'test';
 const { DbPool, iniciarSesion } = await import('./ayudantes.mjs');
-const { ACCIONES, clasificarAcciones } = await import('../../servicios/chat/guiaApp.js');
+const { ACCIONES, clasificarAcciones, resumirOtrosPerfiles } =
+  await import('../../servicios/chat/guiaApp.js');
+const perfilModelo = await import('../../modelos/perfilModelo.js');
 
 const SIN_PERMISO = 403;
 
@@ -94,6 +96,25 @@ describe('Guía del asistente frente a la API real', () => {
       assert.deepEqual(segunGuia, segunApi);
     });
   }
+
+  test('el resumen de los demás roles sale de los perfiles activos de la base', async () => {
+    const perfiles = await perfilModelo.listarPerfiles(true);
+    const renglones = resumirOtrosPerfiles(perfiles, 'Administrador general');
+
+    // Un renglón por cada perfil activo de CUENTAS, menos el de quien pregunta
+    assert.equal(renglones.length, CUENTAS.length - 1);
+    for (const [, rol, perfil] of CUENTAS.filter(
+      (cuenta) => cuenta[2] !== 'Administrador general',
+    )) {
+      const inicio = perfil === rol ? `${rol}:` : `${rol}, perfil "${perfil}":`;
+      assert.ok(
+        renglones.some((texto) => texto.startsWith(inicio)),
+        `Falta el perfil ${perfil}`,
+      );
+    }
+    // El perfil inactivo de la semilla no se menciona
+    assert.ok(!renglones.some((texto) => texto.includes('Alumno plan 2020')));
+  });
 
   test('las peticiones de sondeo no modificaron datos', async () => {
     assert.equal((await DbPool.query(CONTEO_DATOS)).rows[0].conteo, conteoInicial);

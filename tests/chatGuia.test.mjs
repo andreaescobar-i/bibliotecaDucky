@@ -1,7 +1,7 @@
 /*----
  * Programa: chatGuia.test.mjs
  * Objetivo: Probar la guía del asistente Ducky: qué puede hacer cada perfil según sus permisos,
- *           y que la guía sigue de acuerdo con los permisos de la base, con el menú del front y
+ *           qué dice de los demás roles, y que la guía sigue de acuerdo con los permisos de la base, con el menú del front y
  *           con las pantallas que el front marca como pendientes
  * Autores: Equipo OHNO S.A. de C.V.
  * Fecha: 15 de Noviembre de 2026
@@ -16,6 +16,7 @@ import {
   SECCIONES_POR_ROL,
   FUNCIONES_PENDIENTES,
   clasificarAcciones,
+  resumirOtrosPerfiles,
   crearGuia,
 } from '../servicios/chat/guiaApp.js';
 
@@ -159,6 +160,89 @@ describe('Guía: texto para el asistente', () => {
     assert.match(alumno, /Mi cuenta: préstamos y adeudos \(se entrega en el Sprint 2\)/);
     assert.ok(!alumno.includes('Reportes e inventario (se entrega'));
     assert.ok(!guia.includes('Mi cuenta: préstamos y adeudos (se entrega'));
+  });
+});
+
+describe('Guía: qué pueden hacer los demás roles', () => {
+  // Perfiles activos con la forma que devuelve perfilModelo.listarPerfiles
+  const PERFILES = [
+    {
+      nombre: 'Administrador general',
+      rol_nombre: 'Administrador',
+      rol_activo: true,
+      permisos: [...CONSULTA, ...CATALOGO, ...COMPRAS, ...CUENTAS],
+    },
+    {
+      nombre: 'Bibliotecario de ventanilla',
+      rol_nombre: 'Bibliotecario',
+      rol_activo: true,
+      permisos: [...CONSULTA, ...CATALOGO],
+    },
+    {
+      nombre: 'Bibliotecario de consulta',
+      rol_nombre: 'Bibliotecario',
+      rol_activo: true,
+      permisos: CONSULTA,
+    },
+    { nombre: 'Alumno', rol_nombre: 'Alumno', rol_activo: true, permisos: CONSULTA },
+    { nombre: 'Sin permisos', rol_nombre: 'Maestro', rol_activo: true, permisos: [] },
+    { nombre: 'De rol inactivo', rol_nombre: 'Visitante', rol_activo: false, permisos: CONSULTA },
+  ];
+  const renglones = resumirOtrosPerfiles(PERFILES, 'Administrador general');
+  const renglon = (inicio) => renglones.find((texto) => texto.startsWith(inicio));
+
+  test('resume cada perfil activo, menos el de quien pregunta y los de roles inactivos', () => {
+    assert.equal(renglones.length, 4);
+    assert.ok(!renglones.some((texto) => texto.includes('Administrador general')));
+    assert.ok(!renglones.some((texto) => texto.includes('De rol inactivo')));
+  });
+
+  test('dice lo que el perfil puede hacer según sus permisos y el menú de su rol', () => {
+    const alumno = renglon('Alumno:');
+    assert.match(alumno, /Buscar libros en el catálogo/);
+    assert.ok(!alumno.includes('Dar de alta'));
+    assert.match(alumno, /Menú: Catálogo, Mi cuenta\./);
+  });
+
+  test('distingue los perfiles de un mismo rol', () => {
+    assert.match(
+      renglon('Bibliotecario, perfil "Bibliotecario de ventanilla"'),
+      /Dar de alta libros/,
+    );
+    assert.ok(
+      !renglon('Bibliotecario, perfil "Bibliotecario de consulta"').includes('Dar de alta'),
+    );
+  });
+
+  test('abrevia el perfil que puede todo y el que no puede nada', () => {
+    const [administrador] = resumirOtrosPerfiles(PERFILES, 'Alumno');
+    assert.match(administrador, /todas las acciones del sistema/);
+    assert.match(renglon('Maestro, perfil "Sin permisos"'), /ninguna acción de gestión o consulta/);
+  });
+
+  test('la guía incluye a los demás roles y pide no dar datos de personas', () => {
+    const guia = crearGuia(
+      {
+        primer_nombre: 'Patricia',
+        rol_nombre: 'Administrador',
+        perfil_nombre: 'Administrador general',
+        permisos: PERFILES[0].permisos,
+      },
+      PERFILES,
+    );
+    const [, otros] = guia.split('LO QUE PUEDEN HACER LOS DEMÁS ROLES Y PERFILES');
+    assert.match(otros, /- Alumno: Buscar libros/);
+    assert.match(guia, /Nunca digas qué personas tienen ese rol/);
+  });
+
+  test('sin perfiles, la guía lo dice en lugar de inventar', () => {
+    const guia = crearGuia({
+      primer_nombre: 'Prueba',
+      rol_nombre: 'Alumno',
+      perfil_nombre: 'Alumno',
+      permisos: CONSULTA,
+    });
+    assert.match(guia, /No hay información de otros perfiles/);
   });
 });
 

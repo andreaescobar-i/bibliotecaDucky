@@ -45,6 +45,12 @@ Después del cierre se agregó la duración de las conversaciones: viven 12 hora
 inician (`CHAT_HORAS_CONVERSACION`) y luego se borran de la base con sus mensajes. Con eso las
 pruebas quedaron en 143 sin base y 258 con base.
 
+El 16 de noviembre de 2026 se amplió la guía: además de lo que puede hacer quien pregunta, el
+asistente ya responde de forma general qué pueden hacer los demás roles (antes contestaba "No
+cuento con esa información"). El dato sale de los perfiles activos de la base. Probado con
+preguntas reales desde un Bibliotecario y un Alumno; quedaron 149 pruebas sin base y una prueba
+nueva con base.
+
 Pendientes conocidos, por si se retoma:
 
 - Los límites por día y la alerta de presupuesto de Google Cloud, si el uso crece.

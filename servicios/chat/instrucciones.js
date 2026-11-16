@@ -64,17 +64,18 @@ function formatearFechaLarga(fecha) {
  * Objetivo: Armar las instrucciones del asistente para una pregunta.
  * @param {Object} usuario - Cuenta de la sesión (req.usuario).
  * @param {Date} fecha - Momento actual.
+ * @param {Object[]} [perfiles] - Perfiles activos de la base, para describir los demás roles.
  * @returns {string} Instrucciones completas para el modelo.
  * Limitaciones: Incluye nombre, rol, perfil y lo que la cuenta puede hacer; no incluye
  *   identificador, correo ni teléfono.
  */
-function crearInstrucciones(usuario, fecha) {
+function crearInstrucciones(usuario, fecha, perfiles = []) {
   return `${REGLAS_ASISTENTE}
 
 CONTEXTO DE ESTA CONVERSACIÓN
 - Hoy es ${formatearFechaLarga(fecha)}.
 
-${crearGuia(usuario)}`;
+${crearGuia(usuario, perfiles)}`;
 }
 
 export { FRASE_SIN_INFORMACION, crearInstrucciones };

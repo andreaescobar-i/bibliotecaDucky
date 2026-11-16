@@ -8,6 +8,7 @@
 
 import ENTORNO from '../config/entorno.js';
 import * as chatModelo from '../modelos/chatModelo.js';
+import * as perfilModelo from '../modelos/perfilModelo.js';
 import * as chatVista from '../vistas/chatVista.js';
 import * as geminiServicio from '../servicios/geminiServicio.js';
 import { RESULTADOS, responderPregunta } from '../servicios/chat/conversacion.js';
@@ -101,11 +102,18 @@ async function postMensaje(req, res, next) {
       (await chatModelo.crearSesion(usuarioId));
     const idSesion = sesion.id_sesion;
     const historial = await chatModelo.obtenerUltimosMensajes(idSesion, MAX_MENSAJES_HISTORIAL);
+    // Perfiles activos con sus permisos: con ellos el asistente describe los demás roles
+    const perfiles = await perfilModelo.listarPerfiles(true);
     await chatModelo.registrarMensaje({ idSesion, emisor: EMISOR_USUARIO, contenido: pregunta });
 
     let respuesta;
     try {
-      respuesta = await responderPregunta({ usuario: req.usuario, historial, pregunta });
+      respuesta = await responderPregunta({
+        usuario: req.usuario,
+        historial,
+        pregunta,
+        perfiles,
+      });
     } catch (err) {
       const mensaje = obtenerMensajeDeFalla(err);
       if (!mensaje) {

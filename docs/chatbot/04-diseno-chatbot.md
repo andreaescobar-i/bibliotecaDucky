@@ -228,6 +228,11 @@ Coincide exactamente con los permisos guardados en la base (`perfil_permiso`).
 pregunta; las secciones de su menú; lo que sus permisos sí le permiten; lo que no; y las
 funciones de su menú que aún no están habilitadas. El asistente responde con eso.
 
+Además incluye un resumen general de **los demás roles**: un renglón por cada perfil activo, con
+lo que ese perfil puede hacer y las secciones de su menú. Sale de los perfiles y permisos de la
+base, que se leen en cada pregunta (`perfilModelo.listarPerfiles`), así que un perfil nuevo o
+modificado se refleja solo. No incluye personas: el asistente no dice quién tiene cada rol.
+
 Para que la guía no quede desactualizada sin que nadie lo note, hay tres pruebas automáticas:
 
 | Prueba                                | Qué compara                                                           |

@@ -92,13 +92,20 @@ function clasificarRespuesta(texto) {
  * @param {Object} opciones.usuario - Cuenta de la sesión (req.usuario).
  * @param {Object[]} opciones.historial - Mensajes anteriores de la conversación.
  * @param {string} opciones.pregunta - Pregunta ya validada.
+ * @param {Object[]} [opciones.perfiles] - Perfiles activos, para describir los demás roles.
  * @param {Function} [opciones.ejecutar] - Ejecutor de consultas (se cambia solo en pruebas).
  * @returns {Promise<Object>} { texto, resultado, consultas, uso, modelo }.
  * Limitaciones: Propaga ErrorGemini (fallo del modelo) y ErrorConsulta (fallo de la base).
  */
-async function responderPregunta({ usuario, historial, pregunta, ejecutar = ejecutarHerramienta }) {
+async function responderPregunta({
+  usuario,
+  historial,
+  pregunta,
+  perfiles = [],
+  ejecutar = ejecutarHerramienta,
+}) {
   const contenidos = [...armarContenidos(historial), { role: 'user', parts: [{ text: pregunta }] }];
-  const instrucciones = crearInstrucciones(usuario, reloj.ahora());
+  const instrucciones = crearInstrucciones(usuario, reloj.ahora(), perfiles);
   const consultas = [];
   const uso = { tokensEntrada: 0, tokensSalida: 0 };
 

@@ -1,15 +1,17 @@
 /*----
  * Programa: guiaApp.js
  * Objetivo: Describir al asistente Ducky quién le habla y qué puede o no puede hacer esa persona
- *           en el sistema, a partir de los permisos reales de su perfil. Es una guía general:
- *           no indica botones ni pasos
+ *           en el sistema, a partir de los permisos reales de su perfil, y de forma más breve
+ *           qué pueden hacer los demás roles. Es una guía general: no indica botones ni pasos
  * Autores: Equipo OHNO S.A. de C.V.
- * Fecha: 15 de Noviembre de 2026
+ * Fecha: 16 de Noviembre de 2026
  *
  * De dónde sale cada dato (comprobado el 15 de noviembre de 2026 con la aplicación abierta y
  * una cuenta de cada rol):
  *   - Acciones y permisos: los que exige cada ruta de la API (rutas/*.js). La prueba
  *     tests/integracion/chatGuia.test.mjs comprueba contra la API que la guía dice la verdad.
+ *   - Los demás roles: los perfiles activos de la base con sus permisos (se leen en cada
+ *     pregunta), así que un perfil nuevo o modificado se refleja sin tocar este archivo.
  *   - Secciones por rol: el menú que muestra el front (src/components/SessionNavigation.tsx).
  *   - Funciones pendientes: las pantallas que muestran "se entrega en el Sprint N"
  *     (LATER_SPRINTS en src/App.tsx).
@@ -214,14 +216,52 @@ function listar(renglones, vacio) {
 }
 
 /**
- * Objetivo: Redactar para el modelo quién pregunta y qué puede o no puede hacer en el sistema.
+ * Objetivo: Resumir en un renglón qué puede hacer un perfil que no es el de quien pregunta.
+ * @param {{ nombre: string, rol_nombre: string, permisos: string[] }} perfil - Perfil activo.
+ * @returns {string} Por ejemplo 'Alumno: Buscar libros...; ... Menú: Catálogo y Mi cuenta.'
+ */
+function resumirPerfil(perfil) {
+  const { permitidas, noPermitidas } = clasificarAcciones(perfil.permisos ?? []);
+  const titulo =
+    perfil.nombre === perfil.rol_nombre
+      ? perfil.rol_nombre
+      : `${perfil.rol_nombre}, perfil "${perfil.nombre}"`;
+  let acciones = permitidas.map((accion) => accion.descripcion).join('; ');
+  if (permitidas.length === 0) {
+    acciones = 'ninguna acción de gestión o consulta';
+  } else if (noPermitidas.length === 0) {
+    acciones = 'todas las acciones del sistema (las de las listas "sí puede" y "no puede" juntas)';
+  }
+  const secciones = (SECCIONES_POR_ROL[perfil.rol_nombre] ?? []).map((seccion) => seccion.nombre);
+  const menu = secciones.length > 0 ? ` Menú: ${secciones.join(', ')}.` : '';
+  return `${titulo}: ${acciones}.${menu}`;
+}
+
+/**
+ * Objetivo: Resumir qué pueden hacer los demás perfiles activos, para responder preguntas
+ *   generales sobre otros roles.
+ * @param {Object[]} perfiles - Perfiles activos con nombre, rol_nombre, rol_activo y permisos.
+ * @param {string} perfilPropio - Nombre del perfil de quien pregunta (ya se detalla aparte).
+ * @returns {string[]} Un renglón por perfil.
+ * Limitaciones: Solo describe perfiles; no incluye personas ni cuántas cuentas tiene cada uno.
+ */
+function resumirOtrosPerfiles(perfiles, perfilPropio) {
+  return perfiles
+    .filter((perfil) => perfil.rol_activo !== false && perfil.nombre !== perfilPropio)
+    .map(resumirPerfil);
+}
+
+/**
+ * Objetivo: Redactar para el modelo quién pregunta, qué puede o no puede hacer en el sistema y,
+ *   de forma general, qué pueden hacer los demás roles.
  * @param {Object} usuario - Cuenta de la sesión (req.usuario): primer_nombre, rol_nombre,
  *   perfil_nombre y permisos.
+ * @param {Object[]} [perfiles] - Perfiles activos de la base (perfilModelo.listarPerfiles).
  * @returns {string} Guía en texto simple para incluir en las instrucciones.
  * Limitaciones: Lo que puede hacer sale de los permisos del perfil, no del nombre del rol: un
  *   perfil puede tener menos permisos que otros del mismo rol.
  */
-function crearGuia(usuario) {
+function crearGuia(usuario, perfiles = []) {
   const rol = usuario.rol_nombre;
   const { permitidas, noPermitidas } = clasificarAcciones(usuario.permisos ?? []);
   const secciones = SECCIONES_POR_ROL[rol] ?? [];
@@ -254,13 +294,20 @@ ${listar(
 )}
 - Para todos los roles: préstamos, devoluciones, renovaciones, multas, pagos y reportes todavía no se operan en el sistema; se atienden con el personal de la biblioteca.
 
+LO QUE PUEDEN HACER LOS DEMÁS ROLES Y PERFILES (de forma general, según los perfiles activos)
+${listar(
+  resumirOtrosPerfiles(perfiles, usuario.perfil_nombre),
+  'No hay información de otros perfiles.',
+)}
+
 CÓMO USAR ESTA INFORMACIÓN
 - Si pregunta qué puede hacer, cuál es su rol o sus permisos, responde con las listas anteriores.
 - Si pregunta por una acción de la lista "sí puede", confirma que su perfil lo permite e indica en qué sección del menú se encuentra de forma general. No des pasos detallados ni nombres de botones.
 - Si pregunta por una acción de la lista "no puede", dile con claridad que su perfil no tiene ese permiso. Las cuentas y los perfiles los gestiona el Administrador; el alta, cambio y baja de libros corresponden a perfiles de Bibliotecario o Administrador; las compras, a perfiles de Comprador de libros o Administrador.
 - Lo que una persona puede hacer lo decide el permiso de su perfil, no su menú: si la aplicación le muestra una opción que su perfil no permite, el sistema rechazará la operación. Quien puede cambiar un perfil es el Administrador.
 - Si pregunta por una función aún no habilitada, dile que todavía no está disponible en el sistema y en qué sprint se entrega. Sus préstamos y adeudos sí puedes consultarlos tú con la herramienta de su cuenta.
-- Si pregunta por una acción que no aparece en ninguna lista, responde que no cuentas con esa información.`;
+- Si pregunta qué puede hacer otro rol o perfil (por ejemplo "¿y un alumno?" o "¿qué hace el bibliotecario?"), responde de forma general con la lista de los demás roles y perfiles; si ese rol tiene más de un perfil, acláralo. Nunca digas qué personas tienen ese rol ni des datos de sus cuentas.
+- Si pregunta por una acción o un rol que no aparece en ninguna lista, responde que no cuentas con esa información.`;
 }
 
 export {
@@ -269,5 +316,6 @@ export {
   FUNCIONES_PENDIENTES,
   puedeRealizar,
   clasificarAcciones,
+  resumirOtrosPerfiles,
   crearGuia,
 };
