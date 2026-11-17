@@ -32,8 +32,6 @@ import {
   esPerfilGestor,
   esRolCompatible,
   esCorreoInstitucional,
-  esTelefonoValido,
-  separarNombre,
   generarContrasenaTemporal,
 } from '../utilidades/reglasCuentas.js';
 
@@ -307,10 +305,8 @@ async function getUsuario(req, res, next) {
 
 /**
  * Objetivo: Dar de alta una cuenta validando identidad en CIAA o Capital Humano, con contraseña
- *   temporal enviada al correo (HUGUS02). Si el identificador no existe en esos sistemas
- *   (simulados), se registra ahí con el nombre capturado; si existe y no está vigente, se rechaza.
- * @param {Object} req - Petición HTTP. Cuerpo: tipoIdentificador?, identificador, correo,
- *   telefono?, perfil (clave) o rol, nombre? (obligatorio si la persona no está registrada).
+ *   temporal enviada al correo institucional (HUGUS02). La identidad debe existir y estar vigente.
+ * @param {Object} req - Petición HTTP. Cuerpo: tipoIdentificador?, identificador y perfil o rol.
  * @param {Object} res - Respuesta HTTP.
  * @param {Function} next - Envía el error al middleware de errores.
  * @returns {Promise<void>}
@@ -318,15 +314,9 @@ async function getUsuario(req, res, next) {
 async function postUsuario(req, res, next) {
   try {
     const cuerpo = req.body ?? {};
-    const correo = limpiarTexto(cuerpo.correo).toLowerCase();
-    const telefono = limpiarTexto(cuerpo.telefono);
-
     const camposFaltantes = [];
     if (!limpiarTexto(cuerpo.identificador)) {
       camposFaltantes.push('Identificador');
-    }
-    if (!correo) {
-      camposFaltantes.push('Correo institucional');
     }
     if (!limpiarTexto(cuerpo.perfil) && !limpiarTexto(cuerpo.rol)) {
       camposFaltantes.push('Perfil');
@@ -341,15 +331,6 @@ async function postUsuario(req, res, next) {
       cuerpo.identificador,
       cuerpo.tipoIdentificador,
     );
-    if (!esCorreoInstitucional(correo)) {
-      throw new ErrorAplicacion(400, 'Revise el formato y dominio del correo institucional', {
-        campos: ['Correo institucional'],
-      });
-    }
-    if (telefono && !esTelefonoValido(telefono)) {
-      throw new ErrorAplicacion(400, MENSAJES_CUENTAS.TELEFONO_INVALIDO, { campos: ['Teléfono'] });
-    }
-
     // Escenario 4: si CIAA o Capital Humano no responden, no se crea la cuenta
     let identidad;
     try {
@@ -357,20 +338,16 @@ async function postUsuario(req, res, next) {
     } catch {
       throw new ErrorAplicacion(503, MENSAJES_CUENTAS.IDENTIDAD_NO_VALIDADA);
     }
-    if (identidad && !identidad.vigente) {
+    if (!identidad || !identidad.vigente) {
       throw new ErrorAplicacion(400, MENSAJES_CUENTAS.IDENTIDAD_NO_VIGENTE, {
         campos: ['Identificador'],
       });
     }
-    // Persona aún no registrada en CIAA o Capital Humano: se toma el nombre capturado
-    let nombreNuevo = null;
-    if (!identidad) {
-      nombreNuevo = separarNombre(limpiarTexto(cuerpo.nombre).replace(/\s+/g, ' '));
-      if (!nombreNuevo) {
-        throw new ErrorAplicacion(400, MENSAJES_CUENTAS.NOMBRE_INVALIDO, {
-          campos: ['Nombre completo'],
-        });
-      }
+    const correo = identidad.correo_institucional.toLowerCase();
+    if (!esCorreoInstitucional(correo)) {
+      throw new ErrorAplicacion(400, MENSAJES_CUENTAS.CORREO_INVALIDO, {
+        campos: ['Correo institucional'],
+      });
     }
 
     // Escenario 2: datos duplicados, incluso en cuentas inactivas
@@ -389,7 +366,7 @@ async function postUsuario(req, res, next) {
 
     const perfil = await resolverPerfil(cuerpo);
     validarPerfilParaIdentidad(perfil, tipo);
-    const datosPersona = nombreNuevo ?? {
+    const datosPersona = {
       primerNombre: identidad.primer_nombre,
       primerApellido: identidad.primer_apellido,
       segundoApellido: identidad.segundo_apellido,
@@ -400,15 +377,6 @@ async function postUsuario(req, res, next) {
     let usuarioId;
     try {
       usuarioId = await ejecutarTransaccion(async (cliente) => {
-        if (nombreNuevo) {
-          await identidadInstitucionalServicio.registrarIdentidad(cliente, {
-            tipo,
-            identificador,
-            nombre: nombreNuevo,
-            correo,
-            puesto: perfil.rol_nombre,
-          });
-        }
         const idCreado = await usuarioModelo.crearUsuario(cliente, {
           perfilId: perfil.perfil_id,
           programaClave: identidad?.programa_clave ?? null,
@@ -416,7 +384,7 @@ async function postUsuario(req, res, next) {
           identificador,
           ...datosPersona,
           correo,
-          telefono: telefono || null,
+          telefono: null,
           contrasenaHash,
           altaPorUsuarioId: req.usuario.usuario_id,
         });
@@ -426,7 +394,7 @@ async function postUsuario(req, res, next) {
             accion: 'ALTA_CUENTA',
             entidad: 'usuario',
             claveRegistro: identificador,
-            detalle: { perfil: perfil.clave, correo, identidadRegistrada: Boolean(nombreNuevo) },
+            detalle: { perfil: perfil.clave, correo },
             ip: req.ip,
           },
           cliente,
@@ -476,10 +444,9 @@ async function postUsuario(req, res, next) {
 }
 
 /**
- * Objetivo: Modificar nombre, correo, teléfono y/o perfil de una cuenta en una sola operación
- *   (HUGUS04). Tipo/Identificador es de solo lectura. El nombre se puede corregir por decisión
- *   del equipo, aunque la HU lo marca como dato de CIAA o Capital Humano.
- * @param {Object} req - Petición HTTP. Cuerpo: nombre?, correo?, telefono?, perfil? o rol?.
+ * Objetivo: Modificar solo el perfil local de una cuenta. Nombre, correo y teléfono pertenecen
+ *   a los registros institucionales y son de solo lectura en la biblioteca.
+ * @param {Object} req - Petición HTTP. Cuerpo: perfil? o rol?.
  * @param {Object} res - Respuesta HTTP.
  * @param {Function} next - Envía el error al middleware de errores.
  * @returns {Promise<void>}
@@ -487,6 +454,18 @@ async function postUsuario(req, res, next) {
 async function putUsuario(req, res, next) {
   try {
     const cuerpo = req.body ?? {};
+    const camposPersonales = ['nombre', 'correo', 'telefono'].filter((campo) =>
+      tieneCampo(cuerpo, campo),
+    );
+    if (camposPersonales.length > 0) {
+      throw new ErrorAplicacion(
+        400,
+        'Los datos personales se actualizan en CIAA o Capital Humano',
+        {
+          campos: camposPersonales,
+        },
+      );
+    }
     const cuentaActualizada = await ejecutarTransaccion(async (cliente) => {
       await usuarioModelo.bloquearCambiosDeAcceso(cliente);
       const cuenta = await obtenerCuentaDeRuta(req, cliente);
@@ -495,94 +474,26 @@ async function putUsuario(req, res, next) {
         throw new ErrorAplicacion(409, MENSAJES_CUENTAS.CUENTA_INACTIVA);
       }
 
-      const anterior = {};
-      const nuevo = {};
-      const nombreActual = [cuenta.primer_nombre, cuenta.primer_apellido, cuenta.segundo_apellido]
-        .filter(Boolean)
-        .join(' ');
-      let nombre = null;
-      if (tieneCampo(cuerpo, 'nombre')) {
-        const nombreCapturado = limpiarTexto(cuerpo.nombre).replace(/\s+/g, ' ');
-        nombre = separarNombre(nombreCapturado);
-        if (!nombre) {
-          throw new ErrorAplicacion(400, MENSAJES_CUENTAS.NOMBRE_INVALIDO, {
-            campos: ['Nombre completo'],
-          });
-        }
-        if (nombreCapturado === nombreActual) {
-          nombre = null;
-        } else {
-          anterior.nombre = nombreActual;
-          nuevo.nombre = nombreCapturado;
-        }
-      }
-
-      let correo = cuenta.correo;
-      if (tieneCampo(cuerpo, 'correo')) {
-        correo = limpiarTexto(cuerpo.correo).toLowerCase();
-        if (!correo) {
-          throw new ErrorAplicacion(400, 'Dato obligatorio faltante', {
-            campos: ['Correo institucional'],
-          });
-        }
-        const esDuplicado = await usuarioModelo.existeCorreo(correo, cuenta.usuario_id, cliente);
-        if (!esCorreoInstitucional(correo) || esDuplicado) {
-          throw new ErrorAplicacion(400, MENSAJES_CUENTAS.CORREO_INVALIDO, {
-            campos: ['Correo institucional'],
-          });
-        }
-      }
-
-      let telefono = cuenta.telefono;
-      if (tieneCampo(cuerpo, 'telefono')) {
-        telefono = limpiarTexto(cuerpo.telefono) || null;
-        if (telefono && !esTelefonoValido(telefono)) {
-          throw new ErrorAplicacion(400, MENSAJES_CUENTAS.TELEFONO_INVALIDO, {
-            campos: ['Teléfono'],
-          });
-        }
-      }
-
-      let perfilId = cuenta.perfil_id;
       const perfilNuevo = await resolverPerfil(cuerpo, cliente);
-      if (perfilNuevo !== undefined && perfilNuevo?.perfil_id !== cuenta.perfil_id) {
-        if (!req.usuario.permisos.includes('ASIGNAR_PERFILES')) {
-          await registrarRechazo(req, 'CAMBIO_CUENTA', cuenta.identificador, 'SIN_PERMISO_ASIGNAR');
-          throw new ErrorAplicacion(403, MENSAJES_CUENTAS.SIN_PERMISO_ASIGNAR);
-        }
-        await validarCambioDePerfil(req, cliente, cuenta, perfilNuevo);
-        perfilId = perfilNuevo.perfil_id;
-        anterior.perfil = cuenta.perfil_clave;
-        nuevo.perfil = perfilNuevo.clave;
-      }
-
-      if (correo !== cuenta.correo) {
-        anterior.correo = cuenta.correo;
-        nuevo.correo = correo;
-      }
-      if (telefono !== cuenta.telefono) {
-        anterior.telefono = cuenta.telefono;
-        nuevo.telefono = telefono;
-      }
-      if (Object.keys(nuevo).length === 0) {
+      if (perfilNuevo === undefined || perfilNuevo?.perfil_id === cuenta.perfil_id) {
         return { cuenta, huboCambios: false };
       }
-
-      await usuarioModelo.actualizarUsuario(cliente, cuenta.usuario_id, {
-        correo,
-        telefono,
-        perfilId,
-      });
-      if (nombre) {
-        await usuarioModelo.actualizarNombre(cliente, cuenta.usuario_id, nombre);
+      if (!req.usuario.permisos.includes('ASIGNAR_PERFILES')) {
+        await registrarRechazo(req, 'CAMBIO_CUENTA', cuenta.identificador, 'SIN_PERMISO_ASIGNAR');
+        throw new ErrorAplicacion(403, MENSAJES_CUENTAS.SIN_PERMISO_ASIGNAR);
       }
+      await validarCambioDePerfil(req, cliente, cuenta, perfilNuevo);
+      await usuarioModelo.actualizarPerfil(cliente, cuenta.usuario_id, perfilNuevo.perfil_id);
       await bitacoraModelo.registrarEvento(
         {
           actorUsuarioId: req.usuario.usuario_id,
           accion: 'CAMBIO_CUENTA',
           entidad: 'usuario',
           claveRegistro: cuenta.identificador,
-          detalle: { anterior, nuevo },
+          detalle: {
+            anterior: { perfil: cuenta.perfil_clave },
+            nuevo: { perfil: perfilNuevo.clave },
+          },
           ip: req.ip,
         },
         cliente,
@@ -626,11 +537,7 @@ async function putPerfilUsuario(req, res, next) {
       }
       await validarCambioDePerfil(req, cliente, cuenta, perfilNuevo);
 
-      await usuarioModelo.actualizarUsuario(cliente, cuenta.usuario_id, {
-        correo: cuenta.correo,
-        telefono: cuenta.telefono,
-        perfilId: perfilNuevo.perfil_id,
-      });
+      await usuarioModelo.actualizarPerfil(cliente, cuenta.usuario_id, perfilNuevo.perfil_id);
       await bitacoraModelo.registrarEvento(
         {
           actorUsuarioId: req.usuario.usuario_id,

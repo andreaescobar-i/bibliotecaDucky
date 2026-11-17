@@ -2,8 +2,8 @@
  * Programa: identidadInstitucionalServicio.js
  * Objetivo: Consultar la identidad y vigencia institucional de una persona en CIAA (alumnos) o
  *           Capital Humano (personal). Decide a qué sistema preguntar según el tipo de
- *           identificador; las consultas están en identidadInstitucionalModelo.js. Mientras los
- *           sistemas sean simulados, el alta puede registrar ahí a una persona que no existe.
+ *           identificador; las consultas están en identidadInstitucionalModelo.js. Las fuentes
+ *           institucionales solo se consultan desde la biblioteca.
  * Autores: Equipo OHNO S.A. de C.V.
  * Fecha: 27 de Octubre de 2026
  */
@@ -56,34 +56,4 @@ async function consultarVigencias(cuentas) {
   return new Set(vigentes);
 }
 
-/**
- * Objetivo: Registrar a una persona vigente en el sistema simulado que le corresponde (CIAA si
- *   es matrícula, Capital Humano si es nómina), para que el alta pueda crear su cuenta.
- * @param {import('pg').PoolClient} cliente - Cliente de la transacción del alta.
- * @param {Object} persona - Datos de la persona.
- * @param {string} persona.tipo - 'MATRICULA' o 'NOMINA'.
- * @param {string} persona.identificador - Identificador normalizado.
- * @param {{ primerNombre: string, primerApellido: string, segundoApellido: string|null }}
- *   persona.nombre - Nombre separado en partes.
- * @param {string} persona.correo - Correo institucional.
- * @param {string} persona.puesto - Puesto del empleado (solo nómina).
- * @returns {Promise<void>}
- */
-async function registrarIdentidad(cliente, { tipo, identificador, nombre, correo, puesto }) {
-  if (tipo === TIPOS_IDENTIFICADOR.MATRICULA) {
-    await identidadInstitucionalModelo.registrarAlumno(cliente, {
-      matricula: identificador,
-      ...nombre,
-      correo,
-    });
-    return;
-  }
-  await identidadInstitucionalModelo.registrarEmpleado(cliente, {
-    nomina: identificador,
-    ...nombre,
-    correo,
-    puesto,
-  });
-}
-
-export { obtenerIdentidad, consultarVigencia, consultarVigencias, registrarIdentidad };
+export { obtenerIdentidad, consultarVigencia, consultarVigencias };

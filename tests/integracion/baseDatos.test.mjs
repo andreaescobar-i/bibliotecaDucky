@@ -56,8 +56,8 @@ describe('Semillas cargadas', () => {
     ['libro', 8],
     ['ejemplar', 21],
     ['solicitud_adquisicion', 4],
-    ['externo.ciaa_alumno', 8],
-    ['externo.capital_humano_empleado', 8],
+    ['externo.ciaa_alumno', 28],
+    ['externo.capital_humano_empleado', 28],
   ];
   for (const [tabla, esperado] of TOTALES_ESPERADOS) {
     test(`la tabla ${tabla} tiene ${esperado} registros`, async () => {

@@ -14,8 +14,12 @@ const CANDADO_CAMBIOS_ACCESO = 710_001;
 
 // Cuenta con su perfil, rol y permisos vigentes. Nunca incluye el hash de la contraseña.
 const SELECCION_USUARIO = `
-  SELECT u.usuario_id, u.tipo_identificador, u.identificador, u.primer_nombre,
-         u.primer_apellido, u.segundo_apellido, u.correo, u.telefono, u.estado_cuenta,
+  SELECT u.usuario_id, u.tipo_identificador, u.identificador,
+         COALESCE(ciaa.primer_nombre, ch.primer_nombre, u.primer_nombre) AS primer_nombre,
+         COALESCE(ciaa.primer_apellido, ch.primer_apellido, u.primer_apellido) AS primer_apellido,
+         COALESCE(ciaa.segundo_apellido, ch.segundo_apellido, u.segundo_apellido) AS segundo_apellido,
+         COALESCE(ciaa.correo_institucional, ch.correo_institucional, u.correo) AS correo,
+         u.telefono, u.estado_cuenta,
          u.version_sesion, u.debe_cambiar_contrasena, u.fecha_alta, u.ultimo_acceso,
          u.fecha_baja, u.motivo_baja, ub.identificador AS baja_por_identificador,
          pf.perfil_id, pf.clave AS perfil_clave, pf.nombre AS perfil_nombre,
@@ -26,13 +30,18 @@ const SELECCION_USUARIO = `
            '{}'
          ) AS permisos
   FROM usuario u
+  LEFT JOIN externo.ciaa_alumno ciaa ON u.tipo_identificador = 'MATRICULA'
+    AND ciaa.matricula = u.identificador
+  LEFT JOIN externo.capital_humano_empleado ch ON u.tipo_identificador = 'NOMINA'
+    AND ch.nomina = u.identificador
   LEFT JOIN usuario ub ON ub.usuario_id = u.baja_por_usuario_id
   JOIN perfil pf ON pf.perfil_id = u.perfil_id
   JOIN rol r ON r.rol_id = pf.rol_id
   LEFT JOIN perfil_permiso pp ON pp.perfil_id = pf.perfil_id
   LEFT JOIN permiso p ON p.permiso_id = pp.permiso_id`;
 
-const AGRUPACION_USUARIO = 'GROUP BY u.usuario_id, ub.usuario_id, pf.perfil_id, r.rol_id';
+const AGRUPACION_USUARIO =
+  'GROUP BY u.usuario_id, ciaa.matricula, ch.nomina, ub.usuario_id, pf.perfil_id, r.rol_id';
 
 /**
  * Objetivo: Obtener el id y el hash de contraseña de una cuenta para verificar el acceso.
@@ -107,7 +116,7 @@ async function buscarUsuarios(filtros) {
   }
   if (filtros.nombre) {
     agregar(
-      "unaccent(CONCAT_WS(' ', u.primer_nombre, u.primer_apellido, u.segundo_apellido)) ILIKE unaccent(?)",
+      "unaccent(CONCAT_WS(' ', COALESCE(ciaa.primer_nombre, ch.primer_nombre, u.primer_nombre), COALESCE(ciaa.primer_apellido, ch.primer_apellido, u.primer_apellido), COALESCE(ciaa.segundo_apellido, ch.segundo_apellido, u.segundo_apellido))) ILIKE unaccent(?)",
       crearPatronContiene(filtros.nombre),
     );
   }
@@ -124,7 +133,7 @@ async function buscarUsuarios(filtros) {
   const donde = condiciones.length > 0 ? `WHERE ${condiciones.join(' AND ')}` : '';
   const resultado = await DbPool.query(
     `${SELECCION_USUARIO} ${donde} ${AGRUPACION_USUARIO}
-     ORDER BY u.primer_apellido, u.primer_nombre, u.identificador`,
+     ORDER BY primer_apellido, primer_nombre, u.identificador`,
     parametros,
   );
   return resultado.rows;
@@ -233,36 +242,18 @@ async function contarGestores(
 }
 
 /**
- * Objetivo: Guardar correo, teléfono y perfil de una cuenta en una sola operación (HUGUS04).
+ * Objetivo: Cambiar únicamente el perfil local de una cuenta (HUGUS04).
  * @param {import('pg').PoolClient} cliente - Cliente de la transacción.
  * @param {string} usuarioId - Id de la cuenta.
- * @param {{ correo: string, telefono: string|null, perfilId: string }} datos - Valores finales.
+ * @param {string} perfilId - Perfil asignado.
  * @returns {Promise<void>}
  */
-async function actualizarUsuario(cliente, usuarioId, { correo, telefono, perfilId }) {
+async function actualizarPerfil(cliente, usuarioId, perfilId) {
   await cliente.query(
     `UPDATE usuario
-     SET correo = $2, telefono = $3, perfil_id = $4, fecha_modificacion = NOW()
+     SET perfil_id = $2, fecha_modificacion = NOW()
      WHERE usuario_id = $1`,
-    [usuarioId, correo, telefono, perfilId],
-  );
-}
-
-/**
- * Objetivo: Cambiar el nombre y los apellidos de una cuenta.
- * @param {import('pg').PoolClient} cliente - Cliente de la transacción.
- * @param {string} usuarioId - Id de la cuenta.
- * @param {{ primerNombre: string, primerApellido: string, segundoApellido: string|null }} nombre
- *   - Partes del nombre.
- * @returns {Promise<void>}
- */
-async function actualizarNombre(cliente, usuarioId, nombre) {
-  await cliente.query(
-    `UPDATE usuario
-     SET primer_nombre = $2, primer_apellido = $3, segundo_apellido = $4,
-         fecha_modificacion = NOW()
-     WHERE usuario_id = $1`,
-    [usuarioId, nombre.primerNombre, nombre.primerApellido, nombre.segundoApellido],
+    [usuarioId, perfilId],
   );
 }
 
@@ -343,8 +334,7 @@ export {
   bloquearUsuario,
   bloquearCambiosDeAcceso,
   contarGestores,
-  actualizarUsuario,
-  actualizarNombre,
+  actualizarPerfil,
   darDeBajaUsuario,
   reactivarUsuario,
   registrarUltimoAcceso,

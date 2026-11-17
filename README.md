@@ -282,16 +282,13 @@ Todas las respuestas de error de la API tienen la forma
 - **Búsqueda:** `?buscar=` es el campo único del front (matrícula/nómina exacta o parte del
   nombre, sin acentos). También acepta `tipoIdentificador`, `identificador`, `nombre`, `perfil`,
   `rol` y `estado`, combinados. El valor `Todos` no filtra.
-- **Alta:** `{ identificador, correo, telefono?, perfil }` o `{ ..., rol }` como lo envía el
-  front ("Rol asignado" usa el perfil base de ese rol). Si la persona ya está en CIAA o Capital
-  Humano se toma su nombre de ahí; si no está, se registra en ese sistema simulado con el
-  `nombre` capturado (obligatorio en ese caso). Si está pero ya no es vigente, se rechaza. La contraseña temporal se "envía" mostrándola en la consola de la API
-  (`servicios/correoServicio.js`) hasta que haya servidor de correo. Si en el formulario se
-  escribe otro nombre, el front lo corrige justo después del alta.
-- **Cambio:** `{ nombre?, correo?, telefono?, perfil? o rol? }`. El nombre completo se separa
-  en nombre y apellidos (las dos últimas palabras son los apellidos) y su valor anterior queda en
-  la bitácora. Por decisión del equipo se puede corregir, aunque la HU lo marca como dato de
-  CIAA o Capital Humano. Tipo e identificador no se editan.
+- **Alta:** `{ identificador, perfil }` o `{ identificador, rol }`. La matrícula debe existir y
+  estar vigente en CIAA; la nómina, en Capital Humano. Nombre y correo se toman de ese registro.
+  La biblioteca no crea identidades institucionales. La contraseña temporal se "envía"
+  mostrándola en la consola de la API (`servicios/correoServicio.js`) hasta que haya correo real.
+- **Cambio:** solo `{ perfil }` o `{ rol }` para la cuenta local. Matrícula o nómina, nombre,
+  correo y teléfono son de solo lectura. La consulta muestra nombre y correo actuales desde
+  CIAA o Capital Humano; el teléfono histórico no se administra desde la biblioteca.
 - **Reglas que se validan en la API:** alumnos solo con perfiles Alumno; identidad vigente;
   nadie modifica su propio acceso ni se da de baja; nunca se queda el sistema sin un
   Administrador activo con todos los permisos de cuentas y perfiles; la baja se rechaza con

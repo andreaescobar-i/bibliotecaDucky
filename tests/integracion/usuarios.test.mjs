@@ -138,12 +138,6 @@ describe('HUGUS02: alta de usuarios', () => {
       'El identificador institucional ya está registrado',
     ],
     [
-      'correo que ya pertenece a otra cuenta',
-      { identificador: 'A01777111', correo: 'MARIANA.LOPEZ@ducky.edu.mx', rol: 'Alumno' },
-      409,
-      'El correo institucional ya está registrado',
-    ],
-    [
       'alumno no vigente en CIAA',
       { identificador: 'A01000999', correo: 'jorge.ruiz@ducky.edu.mx', rol: 'Alumno' },
       400,
@@ -167,23 +161,6 @@ describe('HUGUS02: alta de usuarios', () => {
       400,
       'Perfil inexistente o inactivo',
     ],
-    [
-      'correo fuera del dominio institucional',
-      { identificador: 'A01777111', correo: 'valeria@gmail.com', rol: 'Alumno' },
-      400,
-      'Revise el formato y dominio del correo institucional',
-    ],
-    [
-      'teléfono que no tiene 10 dígitos',
-      {
-        identificador: 'A01777111',
-        correo: 'valeria.gomez@ducky.edu.mx',
-        telefono: '81-17',
-        rol: 'Alumno',
-      },
-      400,
-      'Teléfono inválido',
-    ],
   ];
   for (const [descripcion, cuerpo, estadoHttp, mensaje] of RECHAZOS) {
     test(`rechaza: ${descripcion}`, async () => {
@@ -193,27 +170,18 @@ describe('HUGUS02: alta de usuarios', () => {
     });
   }
 
-  test('una persona que no está en Capital Humano se registra ahí con el nombre capturado', async () => {
-    const sinNombre = await administradora.post('/api/usuarios', {
-      identificador: 'N000777',
-      correo: 'jose.martinez@ducky.edu.mx',
-      rol: 'Maestro',
-    });
-    assert.equal(sinNombre.status, 400);
-    assert.deepEqual(sinNombre.body.error.detalle.campos, ['Nombre completo']);
-
+  test('rechaza una nómina ausente de Capital Humano aunque se capture su nombre', async () => {
     const respuesta = await administradora.post('/api/usuarios', {
       identificador: 'N000777',
       nombre: 'José Martínez',
-      correo: 'jose.martinez@ducky.edu.mx',
       rol: 'Maestro',
     });
-    assert.equal(respuesta.status, 201);
-    assert.equal(respuesta.body.usuario.nombre, 'José Martínez');
+    assert.equal(respuesta.status, 400);
+    assert.equal(respuesta.body.error.mensaje, 'Identidad no vigente o no validada');
     const { rows } = await DbPool.query(
-      `SELECT vigente, puesto FROM externo.capital_humano_empleado WHERE nomina = 'N000777'`,
+      `SELECT nomina FROM externo.capital_humano_empleado WHERE nomina = 'N000777'`,
     );
-    assert.deepEqual(rows, [{ vigente: true, puesto: 'Maestro' }]);
+    assert.deepEqual(rows, []);
   });
 
   test('un identificador duplicado informa el estado de la cuenta existente', async () => {
@@ -228,17 +196,16 @@ describe('HUGUS02: alta de usuarios', () => {
   test('los campos faltantes se señalan por nombre', async () => {
     const respuesta = await administradora.post('/api/usuarios', { identificador: '  ' });
     assert.equal(respuesta.body.error.mensaje, 'Complete los campos obligatorios señalados');
-    assert.deepEqual(respuesta.body.error.detalle.campos, [
-      'Identificador',
-      'Correo institucional',
-      'Perfil',
-    ]);
+    assert.deepEqual(respuesta.body.error.detalle.campos, ['Identificador', 'Perfil']);
   });
 
   test('si CIAA no responde no crea la cuenta y permite reintentar (escenario 4)', async () => {
     const consultaOriginal = DbPool.query.bind(DbPool);
     mock.method(DbPool, 'query', (sql, ...resto) => {
-      if (typeof sql === 'string' && sql.includes('externo.ciaa_alumno')) {
+      if (
+        typeof sql === 'string' &&
+        sql.trimStart().startsWith('SELECT matricula AS identificador')
+      ) {
         return Promise.reject(new Error('CIAA sin conexión'));
       }
       return consultaOriginal(sql, ...resto);
@@ -316,37 +283,31 @@ describe('HUGUS02: alta de usuarios', () => {
 });
 
 describe('HUGUS04 y HUPRF01: cambio de contacto y de perfil', () => {
-  test('guarda correo y teléfono y registra valores anteriores y nuevos', async () => {
+  test('rechaza cambios de correo y teléfono institucionales', async () => {
     const respuesta = await administradora.put('/api/usuarios/A01999000', {
       correo: 'carlos.perez.soto@ducky.edu.mx',
       telefono: '8110001111',
     });
-
-    assert.equal(respuesta.status, 200);
-    assert.equal(respuesta.body.mensaje, 'Datos de la cuenta actualizados');
-    const evento = await obtenerUltimoEvento('CAMBIO_CUENTA', 'A01999000');
-    assert.deepEqual(evento.detalle.anterior, {
-      correo: 'carlos.perez@ducky.edu.mx',
-      telefono: '8119990000',
-    });
+    assert.equal(respuesta.status, 400);
+    assert.deepEqual(respuesta.body.error.detalle.campos, ['correo', 'telefono']);
   });
 
-  test('corrige el nombre y registra el anterior en la bitácora', async () => {
+  test('rechaza el cambio de nombre y consulta el vigente en CIAA', async () => {
     const respuesta = await administradora.put('/api/usuarios/A01999000', {
       nombre: '  Carlos   Alberto Pérez Soto ',
     });
-
-    assert.equal(respuesta.status, 200);
-    assert.equal(respuesta.body.usuario.nombre, 'Carlos Alberto Pérez Soto');
-    const evento = await obtenerUltimoEvento('CAMBIO_CUENTA', 'A01999000');
-    assert.deepEqual(evento.detalle, {
-      anterior: { nombre: 'Carlos Pérez Soto' },
-      nuevo: { nombre: 'Carlos Alberto Pérez Soto' },
-    });
-    const sinCambios = await administradora.put('/api/usuarios/A01999000', {
-      nombre: 'Carlos Alberto Pérez Soto',
-    });
-    assert.equal(sinCambios.body.mensaje, 'No hay cambios por guardar');
+    assert.equal(respuesta.status, 400);
+    await DbPool.query(
+      `UPDATE externo.ciaa_alumno SET primer_nombre = 'Alberto' WHERE matricula = 'A01999000'`,
+    );
+    try {
+      const consulta = await administradora.get('/api/usuarios/A01999000');
+      assert.equal(consulta.body.usuario.nombre, 'Alberto Pérez Soto');
+    } finally {
+      await DbPool.query(
+        `UPDATE externo.ciaa_alumno SET primer_nombre = 'Carlos' WHERE matricula = 'A01999000'`,
+      );
+    }
   });
 
   const RECHAZOS = [
@@ -355,29 +316,23 @@ describe('HUGUS04 y HUPRF01: cambio de contacto y de perfil', () => {
       '/api/usuarios/A01999000',
       { correo: 'ana.torres@ducky.edu.mx' },
       400,
-      'Correo duplicado o inválido',
+      'Los datos personales se actualizan en CIAA o Capital Humano',
     ],
     [
       'nombre sin apellido',
       '/api/usuarios/A01999000',
       { nombre: 'Carlos' },
       400,
-      'Escriba el nombre con al menos un apellido',
+      'Los datos personales se actualizan en CIAA o Capital Humano',
     ],
     [
       'teléfono inválido',
       '/api/usuarios/A01999000',
       { telefono: '12345' },
       400,
-      'Teléfono inválido',
+      'Los datos personales se actualizan en CIAA o Capital Humano',
     ],
-    [
-      'cuenta inactiva',
-      '/api/usuarios/A01678234',
-      { telefono: '8111111111' },
-      409,
-      'Cuenta inactiva',
-    ],
+    ['cuenta inactiva', '/api/usuarios/A01678234', { perfil: 'PRF-ALU' }, 409, 'Cuenta inactiva'],
     [
       'perfil de otro rol',
       '/api/usuarios/A01999000',
@@ -408,15 +363,12 @@ describe('HUGUS04 y HUPRF01: cambio de contacto y de perfil', () => {
     });
   }
 
-  test('sin permiso "Asignar perfiles" se puede editar el contacto pero no el perfil', async () => {
+  test('sin permiso "Asignar perfiles" no se puede modificar el perfil', async () => {
     const soporte = await iniciarSesion('N000105');
-    const contacto = await soporte.put('/api/usuarios/A01333444', { telefono: '8113334440' });
     const perfil = await soporte.put('/api/usuarios/A01333444', { perfil: 'PRF-ALU' });
 
-    assert.equal(contacto.status, 200);
     assert.equal(perfil.status, 403);
     assert.equal(perfil.body.error.mensaje, 'Sin permiso para asignar perfiles');
-    await DbPool.query(`UPDATE usuario SET telefono = NULL WHERE identificador = 'A01333444'`);
   });
 
   test('asigna un perfil compatible a una cuenta (HUPRF01 escenario 4)', async () => {

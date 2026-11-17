@@ -16,7 +16,7 @@ import DbPool from '../config/db.js';
 async function obtenerAlumno(matricula, cliente = DbPool) {
   const resultado = await cliente.query(
     `SELECT matricula AS identificador, primer_nombre, primer_apellido, segundo_apellido,
-            correo_institucional, vigente
+            programa_clave, correo_institucional, vigente
      FROM externo.ciaa_alumno
      WHERE matricula = $1`,
     [matricula],
@@ -58,49 +58,4 @@ async function listarVigentes(matriculas, nominas) {
   return resultado.rows.map((fila) => fila.identificador);
 }
 
-/**
- * Objetivo: Registrar un alumno vigente en CIAA.
- * @param {import('pg').PoolClient} cliente - Cliente de la transacción del alta.
- * @param {Object} alumno - matricula, primerNombre, primerApellido, segundoApellido, correo.
- * @returns {Promise<void>}
- */
-async function registrarAlumno(cliente, alumno) {
-  await cliente.query(
-    `INSERT INTO externo.ciaa_alumno
-       (matricula, primer_nombre, primer_apellido, segundo_apellido, correo_institucional, vigente)
-     VALUES ($1, $2, $3, $4, $5, TRUE)`,
-    [
-      alumno.matricula,
-      alumno.primerNombre,
-      alumno.primerApellido,
-      alumno.segundoApellido,
-      alumno.correo,
-    ],
-  );
-}
-
-/**
- * Objetivo: Registrar un empleado vigente en Capital Humano.
- * @param {import('pg').PoolClient} cliente - Cliente de la transacción del alta.
- * @param {Object} empleado - nomina, primerNombre, primerApellido, segundoApellido, correo,
- *   puesto.
- * @returns {Promise<void>}
- */
-async function registrarEmpleado(cliente, empleado) {
-  await cliente.query(
-    `INSERT INTO externo.capital_humano_empleado
-       (nomina, primer_nombre, primer_apellido, segundo_apellido, correo_institucional, puesto,
-        vigente)
-     VALUES ($1, $2, $3, $4, $5, $6, TRUE)`,
-    [
-      empleado.nomina,
-      empleado.primerNombre,
-      empleado.primerApellido,
-      empleado.segundoApellido,
-      empleado.correo,
-      empleado.puesto,
-    ],
-  );
-}
-
-export { obtenerAlumno, obtenerEmpleado, listarVigentes, registrarAlumno, registrarEmpleado };
+export { obtenerAlumno, obtenerEmpleado, listarVigentes };

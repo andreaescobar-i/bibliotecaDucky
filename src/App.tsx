@@ -38,6 +38,7 @@ import {
 // La API separa la ubicación en estante y fila: "LIT · A1", "LIT-A1" o "LIT/A1"
 const LOCATION_FORMAT = /^(estante\s+)?[^\s·/-]+\s*[·/-]\s*\S+$/i;
 const LOCATION_HINT = 'Escribe la ubicación como estante y fila, por ejemplo LIT · A1 o LIT-A1.';
+const MOBILE_CATALOG_QUERY = '(max-width: 640px)';
 
 // Opción de la baja desde Gestión de catálogo: un ejemplar o la ficha con todos sus ejemplares
 const REMOVAL_CHOICE = 'Qué dar de baja';
@@ -45,11 +46,16 @@ const WHOLE_BOOK = 'LIBRO_COMPLETO';
 export default function App() {
   // Datos persistidos y sesión.
   const [data, setData] = useState<Data>(emptyData);
+  const [mobile, setMobile] = useState(() => matchMedia(MOBILE_CATALOG_QUERY).matches);
   const [role, setRole] = useState(() => sessionStorage.getItem('ducky-role') || 'Alumno');
   const [route, setRoute] = useState(() => {
     const r = location.hash.slice(1);
     return r === 'circulacion-espera' || manifest.some((n) => n.module === r && !n.overlay)
-      ? routeForRole(r, sessionStorage.getItem('ducky-role') || 'Alumno')
+      ? routeForRole(
+          r,
+          sessionStorage.getItem('ducky-role') || 'Alumno',
+          matchMedia(MOBILE_CATALOG_QUERY).matches,
+        )
       : '27-759';
   });
 
@@ -88,7 +94,11 @@ export default function App() {
     const onHash = () => {
       const r = location.hash.slice(1);
       if (r === 'circulacion-espera' || manifest.some((n) => n.module === r && !n.overlay)) {
-        const next = routeForRole(r, sessionStorage.getItem('ducky-role') || 'Alumno');
+        const next = routeForRole(
+          r,
+          sessionStorage.getItem('ducky-role') || 'Alumno',
+          matchMedia(MOBILE_CATALOG_QUERY).matches,
+        );
         setRoute(next);
         if (next !== r) location.hash = next;
         setOverlay('');
@@ -101,6 +111,15 @@ export default function App() {
     addEventListener('hashchange', onHash);
     return () => removeEventListener('hashchange', onHash);
   }, []);
+  useEffect(() => {
+    const media = matchMedia(MOBILE_CATALOG_QUERY);
+    const onChange = () => setMobile(media.matches);
+    media.addEventListener('change', onChange);
+    return () => media.removeEventListener('change', onChange);
+  }, []);
+  useEffect(() => {
+    if (mobile && session && !['1-336', '6-26'].includes(route)) go('1-336');
+  }, [mobile, session, route]);
   useEffect(
     () => () => {
       if (timer.current) clearTimeout(timer.current);
@@ -156,7 +175,11 @@ export default function App() {
   }
   function go(id: string) {
     setProfileEditor(null);
-    id = routeForRole(id, sessionStorage.getItem('ducky-role') || role);
+    id = routeForRole(
+      id,
+      sessionStorage.getItem('ducky-role') || role,
+      matchMedia(MOBILE_CATALOG_QUERY).matches,
+    );
     setRoute(id);
     location.hash = id;
     setOverlay('');
@@ -454,11 +477,9 @@ export default function App() {
     }
     if (actionName === 'guardar usuario') {
       const old = data.users.find((u) => u.id === current);
-      const name = input('Nombre completo').trim().replace(/\s+/g, ' ');
       const id = current === 'new' ? input('ID o matrícula').trim().toUpperCase() : current;
-      const email = input('Correo institucional').trim();
-      if (!id || !email) {
-        notify('Completa matrícula o nómina y correo institucional.');
+      if (!id) {
+        notify('Escribe la matrícula o nómina institucional.');
         return;
       }
       if (current === 'new' && data.users.some((u) => u.id === id)) {
@@ -466,24 +487,10 @@ export default function App() {
         return;
       }
       const chosenRole = input('Rol asignado').trim() || old?.role || 'Alumno';
-      // Solo se mandan los datos que cambiaron
-      const changes = {
-        ...(name && name !== old?.name ? { nombre: name } : {}),
-        ...(email !== old?.email ? { correo: email } : {}),
-        ...(chosenRole !== old?.role ? { rol: chosenRole } : {}),
-      };
       void remote(async () => {
-        if (current !== 'new') return api.updateUser(current, changes);
-        // Si la persona ya está en CIAA o Capital Humano, el alta toma ese nombre; si se escribió
-        // otro, se corrige después
-        const created: any = await api.createUser({
-          identificador: id,
-          nombre: name,
-          correo: email,
-          rol: chosenRole,
-        });
-        if (name && name !== created.usuario?.nombre) await api.updateUser(id, { nombre: name });
-        return created;
+        if (current !== 'new')
+          return api.updateUser(current, chosenRole !== old?.role ? { rol: chosenRole } : {});
+        return api.createUser({ identificador: id, rol: chosenRole });
       }, close);
       return;
     }
@@ -906,6 +913,7 @@ export default function App() {
       <div ref={root} onClick={delegate} onKeyDown={delegate}>
         {route !== '27-759' && (
           <SessionNavigation
+            mobile={mobile}
             onMenu={(label, anchor) => {
               menuAnchor.current = anchor;
               action(label);

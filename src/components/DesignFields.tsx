@@ -81,6 +81,8 @@ export function DesignInput({
   // Las claves no se editan: identifican la cuenta o la ficha en la BD
   const readOnly =
     (editingUser && fieldLabel === 'ID o matrícula') ||
+    (state.overlay === '241-3699' &&
+      (fieldLabel === 'Nombre completo' || fieldLabel === 'Correo institucional')) ||
     (state.overlay === '211-1034' && state.selected !== 'new' && fieldLabel === 'Clave');
   const numeric = /cantidad|ejemplares|copias|precio|costo|cambio|monto/i.test(fieldLabel);
   if (numeric) initial = initial.replace(/[^0-9.]/g, '');
@@ -103,7 +105,7 @@ export function DesignInput({
         step={type === 'number' ? 'any' : undefined}
         value={value}
         readOnly={readOnly}
-        title={readOnly ? 'Este dato identifica el registro y no se puede cambiar' : undefined}
+        title={readOnly ? 'Dato institucional de solo lectura' : undefined}
         placeholder={initialValue.startsWith('Ej.') ? initialValue : ''}
         autoComplete={type === 'password' ? 'current-password' : 'off'}
         style={{

@@ -7,12 +7,15 @@ import { useDesign } from '../context/DesignContext';
 
 export function SessionNavigation({
   onMenu,
+  mobile = false,
 }: {
   onMenu: (label: string, anchor: HTMLElement) => void;
+  mobile?: boolean;
 }) {
   const { role, action, overlay, userName } = useDesign();
-  const items =
-    role === 'Administrador'
+  const items = mobile
+    ? ['Catálogo']
+    : role === 'Administrador'
       ? ['Reportes', 'Usuarios', 'Libros', 'Administración', 'Operaciones']
       : role === 'Bibliotecario'
         ? ['Catálogo', 'Libros', 'Operaciones']
@@ -39,19 +42,21 @@ export function SessionNavigation({
           );
         })}
       </nav>
-      <button className="session-profile" onClick={() => action('Mi perfil')}>
-        <span className="session-avatar">
-          {name
-            .split(' ')
-            .slice(0, 2)
-            .map((part) => part[0])
-            .join('')}
-        </span>
-        <span>
-          {name}
-          <small>{role}</small>
-        </span>
-      </button>
+      {!mobile && (
+        <button className="session-profile" onClick={() => action('Mi perfil')}>
+          <span className="session-avatar">
+            {name
+              .split(' ')
+              .slice(0, 2)
+              .map((part) => part[0])
+              .join('')}
+          </span>
+          <span>
+            {name}
+            <small>{role}</small>
+          </span>
+        </button>
+      )}
       <button className="session-logout" onClick={() => action('Cerrar sesión')}>
         Cerrar sesión
       </button>

@@ -1,5 +1,9 @@
 # Trazabilidad del Sprint 1 · API SIGB
 
+> La regla actual de identidad institucional y edición de cuentas está en
+> [Identidad institucional y cuentas de biblioteca](casos-uso-identidad.md). Las referencias
+> siguientes describen los escenarios originales del Sprint 1.
+
 Relaciona cada escenario de las historias de usuario del Sprint 1 con la ruta de la API que lo
 implementa y la prueba automática que lo comprueba.
 

@@ -19,10 +19,12 @@ export const defaultRoutes: Record<string, string> = {
   Administrador: '241-3397',
   'Comprador de libros': '207-1669',
 };
-export function routeForRole(id: string, role: string) {
+export function routeForRole(id: string, role: string, mobile = false) {
   if (id === '27-759') return id;
   if (id === 'circulacion-espera')
     return ['Administrador', 'Bibliotecario'].includes(role) ? id : defaultRoutes[role];
+  // En celular, cualquier cuenta consulta únicamente el catálogo y las fichas de libros.
+  if (mobile) return ['1-336', '6-26'].includes(id) ? id : '1-336';
   const entry = manifest.find((item) => item.module === id && !item.overlay);
   if (!entry) return defaultRoutes[role];
   if (['1-336', '272-2449', '207-1228'].includes(id)) {

@@ -4,6 +4,7 @@
  */
 
 import { DesignInput, DesignSelect, DesignText, DynamicSlot } from '../../../design-controls';
+import { useDesign } from '../../../context/DesignContext';
 type ButtonsProps = {
   className?: string;
   buttonText?: string;
@@ -50,6 +51,8 @@ function Buttons({
   );
 }
 export default function EditarUsuario() {
+  const { selected } = useDesign();
+  const esAlta = selected === 'new';
   return (
     <div
       className="bg-[var(--bg\/5,white)] border border-[var(--border\/2,#e5e6eb)] border-solid content-stretch flex flex-col gap-[20px] items-start overflow-clip p-[28px] relative rounded-[10px] shadow-[0px_16px_48px_0px_rgba(0,0,0,0.2)] size-full"
@@ -60,9 +63,13 @@ export default function EditarUsuario() {
         className="[word-break:break-word] font-['Poppins:Regular'] leading-[28px] not-italic relative shrink-0 text-[20px] text-[color:var(--text\/1,#1d2129)] w-[576px]"
         data-node-id="241:3700"
       >
-        Alta de usuario
+        {esAlta ? 'Alta de usuario' : 'Editar cuenta de biblioteca'}
       </DesignText>
+      <p className="text-[12px] text-[#4b4b4b]">
+        Nombre y correo se consultan en CIAA o Capital Humano; aquí solo se asigna el rol.
+      </p>
       <div
+        style={{ display: esAlta ? 'none' : undefined }}
         className="content-stretch flex flex-col gap-[12px] items-start overflow-clip relative shrink-0 w-full"
         data-node-id="241:3701"
         data-name="Título"
@@ -140,6 +147,7 @@ export default function EditarUsuario() {
         className="content-stretch flex flex-col gap-[12px] items-start overflow-clip relative shrink-0 w-full"
         data-node-id="241:3707"
         data-name="Editorial"
+        style={{ display: esAlta ? 'none' : undefined }}
       >
         <DesignText
           className="[word-break:break-word] font-['Poppins:Medium'] leading-[18px] not-italic relative shrink-0 text-[12px] text-[color:var(--text\/1,#1d2129)] w-[576px]"
